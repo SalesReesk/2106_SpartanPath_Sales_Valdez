@@ -1,268 +1,107 @@
-#### STUDENT / TEACHER
+#### STUDENT / FACULTY (TEACHER)
 
 ##### Account
-* Registers/Logs in.
+* Registers/Logs in with institutional email (`@g.batstate-u.edu.ph`).
 * Logs out.
-* Views their profile.
-* Updates their profile.
-* Changes their password.
+* Views their profile avatar, ID number, and access level.
+* Updates their profile name.
+* Changes their password securely via Firebase Auth.
 
-##### Asset Discovery
-* Views the campus map.
-* Searches for an asset.
-* Views asset markers.
-* Selects an asset marker.
-* Views asset details.
-* Views the asset's location.
-* Searches assets by name.
-* Searches assets by type.
-* Filters assets.
-* Views nearby assets.
-* Gets their current location.
-* Calculates distance to an asset.
+##### Campus Navigation & Map Discovery
+* Opens the interactive KML campus map.
+* Views building polygons and permanent building labels.
+* Selects a destination building to view its asset inventory grouped by floor and room.
+* Computes A* shortest path navigation routes from current GPS position to destination.
+* Views turn-by-turn walking steps and simulated GPS movement.
+* Receives arrival alerts upon arriving within 2 meters of the destination.
 
-##### Asset Reporting
-* Reports a damaged asset.
-* Reports a malfunctioning asset.
-* Reports a missing asset.
-* Reports an incorrect asset location.
-* Reports incorrect asset information.
-* Adds a description to a report.
-* Uploads a photo as evidence.
-* Submits the report.
-* Views their submitted reports.
-* Checks the status of a report.
-* Views whether a report was resolved.
+##### Asset Discovery & Inventory
+* Searches assets by ID, name, building, or room.
+* Filters assets by building and availability status chips (Available, Needs Repair, Damaged).
+* Sorts inventory items instantly using the quick-sort modal button (Tag A-Z, Name A-Z, Status, Condition).
+* Views asset details in a modal card with automatic `ic_inventory_box` photo placeholder fallback.
+* *(Students: Read-only inventory access; Teachers: Faculty read/write access).*
 
-##### Information
-* Views asset condition.
-* Views asset status.
-* Views asset location.
-* Views available asset information.
-* Views maintenance status when applicable.
+##### Asset & Maintenance Reporting
+* Reports a damaged, missing, or faulty asset directly from equipment details.
+* Incident location auto-fills with the asset's assigned location and locks as read-only.
+* Captures a mandatory evidence photo via device camera or gallery, crops with `uCrop`, and uploads to Cloudinary CDN.
+* Submits maintenance reports to Firebase Firestore.
+* Views their submitted reports, checks ticket status, and tracks repair progress.
 
-
-
-\----------------------------------------------------------------------------------
-
-
+----------------------------------------------------------------------------------
 
 #### ADMIN
 
-##### Account \& User Management
-
-* Logs in.
+##### Account & User Management
+* Logs in with administrator credentials.
 * Logs out.
-* Disables/enables a user account.
-* Changes a user's role.
-* Searched for a user.
-* Resets a user's password.
+* Accesses the User Management screen to search user accounts.
+* Creates new user accounts with specific roles (Admin, Maintenance, Teacher, Student).
+* Modifies/updates a user's assigned role.
+* Deletes user accounts.
 
-
-
-##### Asset Management
-
-* Adds a new asset.
-* Assigns an automatically generated Asset ID.
-* Edits asset information.
+##### Asset Management & Inventory
+* Adds a new equipment asset with automatically generated Asset ID (`AAMS-xxxx`).
+* Edits asset information, location, remarks, status, and condition.
 * Deletes an asset.
-* Views asset details.
-* Searches for an asset.
-* Filters assets by type.
-* Filters assets by location.
-* Filters assets by condition.
-* Filters assets by status.
-* Views all assets on the map.
-* Views as asset's exact map location.
-* Relocate an asset's location.
-* Uploads/replaces an asset photo.
-* Adds remarks to an asset.
-* Changes an asset's condition.
-* Changes a asset's status.
+* Relocates an asset and updates spatial mapping.
+* Uploads/replaces an asset photo via camera or gallery (with `uCrop` and Cloudinary).
+* Filters and sorts inventory across all campus buildings.
 
+##### Maintenance Ticketing & Dispatch
+* Views all campus maintenance/problem reports.
+* Reviews submitted reports, priority levels, and evidence photos.
+* Assigns a maintenance staff member and sets issue priority (*Pending* ➔ *In Progress*).
+* Reassigns a maintenance ticket to a different staff member.
+* Updates or advances ticket status through explicit status selection (*Pending*, *In Progress*, *Resolved*, *Rejected*).
+* Deletes invalid or duplicate report tickets.
 
-
-##### Inventory
-
-* Views the complete inventory.
-* Adds an asset to inventory.
-* Removes an asset from inventory.
-* Updates inventory information.
-* Searches inventory.
-* Filters inventory.
-* Checks unavailable/missing assets.
-* Checks damaged assets.
-* Checks assets requiring maintenance.
-
-
-
-##### Reports
-
-* Views maintenance/problem reports.
-* Reviews a submitted report.
-* Changes a report's status.
-* Assigns a report to maintenance personnel.
-* Close a completed report.
-* Views asset history.
-* Views changes made to an asset.
-
-
-
-##### Map
-
-* Opens the campus map.
-* Searches for an asset on the map.
-* Selects an asset marker.
-* Views asset details from the marker.
-* Uses current location to locate themselves.
-* Calculates distance to an asset.
-
-
-
-\----------------------------------------------------------------------------------
-
-
+----------------------------------------------------------------------------------
 
 #### Maintenance Personnel
 
-##### Account
-
-* Logs in.
+##### Account & Profile
+* Logs in with maintenance credentials.
 * Logs out.
-* Updates their profile.
+* Updates their profile name and uploads profile picture.
 * Changes their password.
 
+##### Work Order & Maintenance Management
+* Views assigned maintenance reports and work orders.
+* Reviews ticket details, asset tags, and evidence photos.
+* Updates work order status using the explicit status selection dialog (*Pending*, *In Progress*, *Resolved*, *Rejected* without looping).
+* **Permission Restriction:** Cannot assign or reassign report tickets to other staff (reassignment is restricted strictly to Administrators).
+* Updates asset condition and operational status upon resolving repairs.
 
+----------------------------------------------------------------------------------
 
-##### Asset Inspection
+#### GUEST / VISITOR USER
 
-* Views assigned assets.
-* Searches for an asset.
-* Opens an asset's details.
-* Views the asset's location on the map.
-* Navigates to an asset location.
-* Inspects an asset.
-* Updates asset condition.
-* Updates asset status.
-* Adds maintenance remarks.
-* Uploads a photo of the asset.
-* Replaces an outdated asset photo.
-* Reports an asset as damaged.
-* Reports an asset as missing.
-* Reports an asset as needing maintenance.
-* Marks an asset as under maintenance.
-* Marks an asset as repaired.
-* Marks an asset as operational.
+##### Public Exploration
+* Launches the app and selects "Continue as Visitor Guest".
+* Explores the public interactive campus map and building locations.
+* Views walking directions and pathfinding routes.
+* Attempts to access restricted write actions (such as inventory management or report submission), which automatically triggers a "Sign In Required" modal prompting registration or login.
 
-
-
-##### Maintenance Requests
-
-* Views assigned maintenance requests.
-* Opens a maintenance request.
-* Accepts a maintenance task.
-* Updates task status.
-* Add notes to a task.
-* Uploads before-maintenance photos.
-* Marks maintenance as completed.
-* Returns a task for further work.
-* Views previous maintenance history.
-
-
-
-##### Map
-
-* Opens campus map
-* Searches for an asset.
-* Views asset location.
-* Gets distance from current location to asset.
-* Uses the map to locate the asset.
-* Views nearby assets requiring maintenance.
-
-
-
-\----------------------------------------------------------------------------------
-
-
+----------------------------------------------------------------------------------
 
 #### System-Level Scenarios
 
-##### Authentication
+##### Authentication & RBAC
+* Successful login across role types (Admin, Maintenance, Teacher, Student, Visitor).
+* Password reset and secure password updates.
+* Role-Based Access Control (RBAC) enforcement across fragments and UI actions.
 
-* Successful login.
-* Incorrect password.
-* Invalid account.
-* Disabled account.
-* Password reset.
-* Logout.
+##### GPS / Location & Pathfinding
+* Location permissions granted or denied.
+* KML campus graph parsing into `GeoNode` and `GeoEdge` spatial adjacency lists.
+* A* Shortest Path calculation using Haversine distance heuristics.
+* Real-time GPS tracking, pan-to-user, and arrival alert triggers.
 
-
-
-##### GPS / Location
-
-* Location permission granted.
-* Location permission denied.
-* GPS disabled.
-* Current location unavailable.
-* Asset has valid coordinates.
-* Asset has missing/invalid coordinates.
-* Calculate distance between user and asset.
-
-
-
-##### Map
-
-* Map loads successfully.
-* Map fails to load.
-* Asset markers load.
-* Multiple assets at nearby locations.
-* User selects a marker.
-* User searches for an asset.
-* Map centers on current location.
-
-
-
-##### Asset
-
-* Add asset.
-* View asset.
-* Edit asset.
-* Delete asset.
-* Filter asset.
-* Asset photo upload.
-* Invalid asset information.
-* Duplicate asset information.
-* Asset location update.
-
-
-
-##### Reports
-
-* Submit report.
-* Report with photo.
-* Report without photo.
-* Report assigned to maintenance.
-* Report being worked on.
-* Report completed.
-* Report rejected/invalid.
-* Report history.
-
-
-
-##### Firebase / Backend
-
-* Data successfully saved.
-* Data successfully retrieved.
-* Data updated.
-* Date deleted.
-* Internet unavailable.
-* Firebase request fails.
-* Photo upload fails.
-* Authentication fails.
-* Data synchronization.
-
-
-
-\----------------------------------------------------------------------------------
-
-
+##### Media & Storage Pipeline
+* Mandatory evidence photo capture via camera or gallery.
+* Aspect-ratio constrained image cropping using `uCrop`.
+* Secure unsigned media upload to Cloudinary CDN returning secure secure URLs.
+* Firebase Firestore NoSQL document persistence wrapped in `BaseRepository.safeCall()` exception handling.
+* ViewBinding `_binding` null safety checks and `viewLifecycleOwner` lifecycle scope protection against null pointer exceptions.
