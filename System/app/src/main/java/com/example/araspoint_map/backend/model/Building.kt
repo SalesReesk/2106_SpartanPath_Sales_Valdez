@@ -1,6 +1,6 @@
 package com.example.araspoint_map.backend.model
 
-import com.example.araspoint_map.backend.navigation.GeoNode
+import com.example.araspoint_map.backend.model.GeoNode
 
 data class Building(
     val id: String = "",

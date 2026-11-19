@@ -29,7 +29,7 @@ class ArasPointApp : Application() {
         try {
             val ctx = applicationContext
             val osmConfig = Configuration.getInstance()
-            osmConfig.userAgentValue = "ArasPoint-BatStateU-CampusMap/1.0 (batstate-u.edu.ph; com.example.araspoint_map)"
+            osmConfig.userAgentValue = "SpartanPath-BatStateU-CampusMap/1.0 (batstate-u.edu.ph; com.example.araspoint_map)"
             val basePath = File(cacheDir, "osmdroid")
             val tileCache = File(basePath, "tiles")
             osmConfig.osmdroidBasePath = basePath

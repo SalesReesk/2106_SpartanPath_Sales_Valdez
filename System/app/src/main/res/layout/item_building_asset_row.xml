@@ -37,24 +37,48 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="12dp"
+            android:layout_marginEnd="4dp"
             android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/txtRowAssetName"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/poppins_bold"
-                android:text="Dell OptiPlex Workstation"
-                android:textColor="@color/on_surface"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/txtRowAssetName"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Dell OptiPlex Workstation"
+                    android:textColor="@color/on_surface"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+
+                <TextView
+                    android:id="@+id/txtRowAssetStatus"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="6dp"
+                    android:background="@drawable/bg_status_pill_available"
+                    android:fontFamily="@font/inter_18pt_bold"
+                    android:paddingHorizontal="8dp"
+                    android:paddingVertical="3dp"
+                    android:text="Available"
+                    android:textColor="@color/status_available"
+                    android:textSize="10sp" />
+            </LinearLayout>
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:gravity="center_vertical"
-                android:layout_marginTop="2dp">
+                android:layout_marginTop="3dp">
 
                 <TextView
                     android:id="@+id/txtRowAssetTag"
@@ -70,27 +94,18 @@
 
                 <TextView
                     android:id="@+id/txtRowAssetLocation"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
                     android:fontFamily="@font/inter_18pt_regular"
-                    android:text="• Lab 3"
+                    android:text="HEB Floor 2 Room 204"
                     android:textColor="@color/on_surface_variant"
-                    android:textSize="11sp" />
+                    android:textSize="11sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
             </LinearLayout>
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/txtRowAssetStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:background="@drawable/bg_status_pill_available"
-            android:fontFamily="@font/inter_18pt_bold"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="3dp"
-            android:text="Available"
-            android:textColor="@color/status_available"
-            android:textSize="10sp" />
 
     </LinearLayout>
 </androidx.cardview.widget.CardView>

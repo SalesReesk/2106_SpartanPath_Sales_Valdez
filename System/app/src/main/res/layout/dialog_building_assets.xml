@@ -60,6 +60,22 @@
             app:tint="@color/on_surface_variant" />
     </RelativeLayout>
 
+    <!-- Shortest Path Navigation Button -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnNavigateToBuilding"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:fontFamily="@font/poppins_bold"
+        android:text="Directions (Shortest Path)"
+        android:textColor="#FFFFFF"
+        app:backgroundTint="#38BDF8"
+        app:cornerRadius="10dp"
+        app:icon="@drawable/ic_explore"
+        app:iconGravity="textStart"
+        app:iconPadding="8dp"
+        app:iconTint="#FFFFFF" />
+
     <View
         android:layout_width="match_parent"
         android:layout_height="1dp"

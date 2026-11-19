@@ -67,7 +67,7 @@ class BuildingAssetsAdapter(
                 val assetHolder = holder as AssetViewHolder
                 val b = assetHolder.binding
                 b.txtRowAssetName.text = asset.assetName.ifBlank { asset.assetType.ifBlank { "Campus Asset" } }
-                b.txtRowAssetTag.text = asset.assetId
+                b.txtRowAssetTag.text = asset.getFormattedMapTag()
                 b.txtRowAssetLocation.text = "• ${asset.location.ifBlank { "Main Facility" }}"
                 b.txtRowAssetStatus.text = asset.status.name.replace("_", " ")
 

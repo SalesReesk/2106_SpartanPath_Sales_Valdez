@@ -1,5 +1,8 @@
 package com.example.araspoint_map.backend.navigation
 
+import com.example.araspoint_map.backend.model.GeoNode
+import com.example.araspoint_map.backend.model.NavigationStep
+import com.example.araspoint_map.backend.model.enums.TurnType
 import java.util.PriorityQueue
 import kotlin.math.abs
 import kotlin.math.atan2
@@ -7,31 +10,6 @@ import kotlin.math.cos
 import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
-
-data class GeoNode(
-    val id: String = "",
-    val name: String = "",
-    val lat: Double = 0.0,
-    val lng: Double = 0.0
-)
-
-enum class TurnType {
-    HEAD_STRAIGHT,
-    TURN_SLIGHT_LEFT,
-    TURN_LEFT,
-    TURN_SHARP_LEFT,
-    TURN_SLIGHT_RIGHT,
-    TURN_RIGHT,
-    TURN_SHARP_RIGHT,
-    ARRIVED
-}
-
-data class NavigationStep(
-    val instruction: String = "",
-    val distanceMeters: Double = 0.0,
-    val turnType: TurnType = TurnType.HEAD_STRAIGHT,
-    val targetNode: GeoNode = GeoNode()
-)
 
 class CampusNavigationEngine(
     val nodes: List<GeoNode>,
@@ -58,6 +36,35 @@ class CampusNavigationEngine(
         val y = sin(dLambda) * cos(phi2)
         val x = cos(phi1) * sin(phi2) - sin(phi1) * cos(phi2) * cos(dLambda)
         return (Math.toDegrees(atan2(y, x)) + 360.0) % 360.0
+    }
+
+    fun findNearestNode(lat: Double, lng: Double): GeoNode? {
+        if (nodes.isEmpty()) return null
+        return nodes.minByOrNull { distanceBetween(lat, lng, it.lat, it.lng) }
+    }
+
+    fun findShortestPathFromLocation(
+        userLat: Double,
+        userLng: Double,
+        targetNodeId: String
+    ): List<GeoNode> {
+        val userGeoNode = GeoNode("user_pos", "Current Location", userLat, userLng)
+        val targetNode = nodes.find { it.id == targetNodeId } ?: GeoNode(targetNodeId, "Destination", userLat, userLng)
+
+        val nearestStart = findNearestNode(userLat, userLng)
+        if (nearestStart == null) {
+            return listOf(userGeoNode, targetNode)
+        }
+
+        val pathOnGraph = findPathAStar(nearestStart.id, targetNodeId)
+        if (pathOnGraph.isEmpty()) {
+            return listOf(userGeoNode, targetNode)
+        }
+
+        val fullPath = mutableListOf(userGeoNode)
+        fullPath.addAll(pathOnGraph)
+        activePath = fullPath
+        return fullPath
     }
 
     fun findPathAStar(startNodeId: String, targetNodeId: String): List<GeoNode> {
@@ -147,6 +154,43 @@ class CampusNavigationEngine(
         return steps
     }
 
+    fun distanceToBuildingPolygon(
+        userLat: Double,
+        userLng: Double,
+        boundary: List<GeoNode>,
+        centerLat: Double,
+        centerLng: Double
+    ): Double {
+        if (boundary.isEmpty()) {
+            return distanceBetween(userLat, userLng, centerLat, centerLng)
+        }
+
+        var minDistance = Double.MAX_VALUE
+        for (i in 0 until boundary.size) {
+            val a = boundary[i]
+            val b = boundary[(i + 1) % boundary.size]
+            val dist = distanceToSegment(userLat, userLng, a.lat, a.lng, b.lat, b.lng)
+            if (dist < minDistance) {
+                minDistance = dist
+            }
+        }
+
+        val centerDist = distanceBetween(userLat, userLng, centerLat, centerLng)
+        return minOf(minDistance, centerDist)
+    }
+
+    fun checkArrival(
+        userLat: Double,
+        userLng: Double,
+        boundary: List<GeoNode>,
+        centerLat: Double,
+        centerLng: Double,
+        thresholdMeters: Double = 2.0
+    ): Boolean {
+        val dist = distanceToBuildingPolygon(userLat, userLng, boundary, centerLat, centerLng)
+        return dist <= thresholdMeters
+    }
+
     private fun distanceToSegment(pLat: Double, pLng: Double, aLat: Double, aLng: Double, bLat: Double, bLng: Double): Double {
         val abDistSq = (bLat - aLat).pow(2) + (bLng - aLng).pow(2)
         if (abDistSq == 0.0) return distanceBetween(pLat, pLng, aLat, aLng)
@@ -156,5 +200,46 @@ class CampusNavigationEngine(
         val projLat = aLat + clampedT * (bLat - aLat)
         val projLng = aLng + clampedT * (bLng - aLng)
         return distanceBetween(pLat, pLng, projLat, projLng)
+    }
+
+    private fun projectPointOnSegment(pLat: Double, pLng: Double, aLat: Double, aLng: Double, bLat: Double, bLng: Double): GeoNode {
+        val abDistSq = (bLat - aLat).pow(2) + (bLng - aLng).pow(2)
+        if (abDistSq == 0.0) return GeoNode("proj", "Projected", aLat, aLng)
+
+        val t = ((pLat - aLat) * (bLat - aLat) + (pLng - aLng) * (bLng - aLng)) / abDistSq
+        val clampedT = t.coerceIn(0.0, 1.0)
+        val projLat = aLat + clampedT * (bLat - aLat)
+        val projLng = aLng + clampedT * (bLng - aLng)
+        return GeoNode("proj", "Projected", projLat, projLng)
+    }
+
+    fun getActivePath(): List<GeoNode> = activePath
+
+    fun snapToRouteOrNetwork(userLat: Double, userLng: Double, routePath: List<GeoNode>): GeoNode {
+        if (routePath.isEmpty()) return GeoNode("user_pos", "Current Location", userLat, userLng)
+
+        var closestPoint: GeoNode = routePath[0]
+        var minDistance = Double.MAX_VALUE
+
+        for (i in 0 until routePath.size - 1) {
+            val a = routePath[i]
+            val b = routePath[i + 1]
+            val projected = projectPointOnSegment(userLat, userLng, a.lat, a.lng, b.lat, b.lng)
+            val dist = distanceBetween(userLat, userLng, projected.lat, projected.lng)
+            if (dist < minDistance) {
+                minDistance = dist
+                closestPoint = projected
+            }
+        }
+
+        if (minDistance > 15.0) {
+            val nearestNode = findNearestNode(userLat, userLng)
+            if (nearestNode != null && distanceBetween(userLat, userLng, nearestNode.lat, nearestNode.lng) < 15.0) {
+                return nearestNode
+            }
+            return GeoNode("user_pos", "Current Location", userLat, userLng)
+        }
+
+        return closestPoint
     }
 }

@@ -15,34 +15,23 @@
             background-color: #0f172a;
         }
         .user-location-marker {
-            width: 20px;
-            height: 20px;
+            width: 22px;
+            height: 22px;
             background-color: #38BDF8;
             border: 3px solid #FFFFFF;
             border-radius: 50%;
-            box-shadow: 0 0 12px rgba(56,189,248,0.9);
+            box-shadow: 0 0 16px rgba(56,189,248,0.9);
+            animation: pulse-user 2s infinite;
+        }
+        @keyframes pulse-user {
+            0% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(56, 189, 248, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(56, 189, 248, 0); }
         }
         .building-pin-marker {
             display: flex;
             align-items: center;
             justify-content: center;
-        }
-        .building-pin-inner {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            border: 2px solid #FFFFFF;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 3px 8px rgba(0,0,0,0.6);
-            cursor: pointer;
-        }
-        .building-pin-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #FFFFFF;
-            border-radius: 50%;
         }
         .building-permanent-label {
             background-color: rgba(15, 23, 42, 0.9) !important;
@@ -55,12 +44,47 @@
             padding: 2px 6px !important;
             box-shadow: 0 2px 6px rgba(0,0,0,0.5) !important;
         }
+        .arrival-card {
+            position: absolute;
+            top: 76px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(15, 23, 42, 0.95);
+            border: 2px solid #22C55E;
+            box-shadow: 0 8px 24px rgba(34, 197, 94, 0.4);
+            border-radius: 14px;
+            padding: 12px 20px;
+            color: #FFFFFF;
+            font-family: sans-serif;
+            text-align: center;
+            display: none;
+            transition: all 0.3s ease-in-out;
+        }
+        .arrival-card h4 {
+            margin: 0;
+            font-size: 15px;
+            color: #4ADE80;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .arrival-card p {
+            margin: 4px 0 0 0;
+            font-size: 12px;
+            color: #CBD5E1;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div id="arrivalCard" class="arrival-card">
+        <h4 id="arrivalTitle">🎯 Arrived at Building!</h4>
+        <p id="arrivalSubtitle">You are within 2m of your destination.</p>
+    </div>
+
     <script>
-        // Strict campus panning/sliding limits (Southwest to Northeast)
+        // Strict campus panning/sliding limits
         var campusBounds = L.latLngBounds(
             [14.065000, 120.624500],
             [14.068500, 120.628500]
@@ -79,11 +103,17 @@
             maxBoundsViscosity: 1.0
         }).setView([14.066730, 120.626382], 19);
 
-        // Standard High-Resolution Google Satellite Tile Layer
+        // Google Satellite Tile Layer
         L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
             maxZoom: 22,
             maxNativeZoom: 20
         }).addTo(map);
+
+        map.on('click', function(e) {
+            if (window.AndroidBridge && window.AndroidBridge.onMapTapped) {
+                window.AndroidBridge.onMapTapped(e.latlng.lat, e.latlng.lng);
+            }
+        });
 
         // --- Campus Perimeter Boundary (Purple) ---
         L.polygon([
@@ -98,7 +128,7 @@
             fillOpacity: 0.12
         }).addTo(map);
 
-        // --- Exact KML Color Scheme Mapping & Coordinates ---
+        // --- Building Polygons & Markers ---
         var buildingAreas = [
             { id: "HEB", name: "HEB Building", shortName: "HEB", lat: 14.067322, lng: 120.626777, color: "#FACC15", pinColor: "#FACC15", coords: [[14.067654,120.626759],[14.066907,120.626614],[14.066883,120.626708],[14.066943,120.626752],[14.067289,120.626824],[14.067662,120.626893],[14.067767,120.626803],[14.067654,120.626759]] },
             { id: "GYM", name: "JOSON GYMNASIUM", shortName: "GYM", lat: 14.067103, lng: 120.626169, color: "#FACC15", pinColor: "#FACC15", coords: [[14.066901,120.626027],[14.066899,120.626286],[14.067241,120.626292],[14.067257,120.626252],[14.067321,120.626254],[14.067329,120.626178],[14.067321,120.626085],[14.067300,120.626072],[14.067261,120.626080],[14.067250,120.626037],[14.066901,120.626027]] },
@@ -113,7 +143,7 @@
             { id: "ERMITA", name: "ERMITA BUILDING", shortName: "ERMITA", lat: 14.067032, lng: 120.625615, color: "#F97316", pinColor: "#F97316", coords: [[14.066957,120.625683],[14.067102,120.625672],[14.067089,120.625554],[14.066951,120.625565],[14.066957,120.625683]] },
 
             { id: "LEMERY", name: "LEMERY Building", shortName: "LEMERY", lat: 14.065859, lng: 120.626151, color: "#FACC15", pinColor: "#2563EB", coords: [[14.065682,120.626052],[14.065679,120.626343],[14.065940,120.626357],[14.065954,120.625954],[14.065462,120.625928],[14.065454,120.626034],[14.065682,120.626052]] },
-            { id: "LIAN", name: "LIAN Cafeteria", shortName: "LIAN", lat: 14.066721, lng: 120.626725, color: "#2563EB", pinColor: "#2563EB", coords: [[14.066802,120.626572],[14.066669,120.626558],[14.066646,120.626850],[14.066776,120.626853],[14.066802,120.626572]] },
+            { id: "LIAN", name: "LIAN Cafeteria", shortName: "LIAN", lat: 14.066721, lng: 120.626725, color: "#2563EB", pinColor: "#2563EB", coords: [[14.066802,120.626572],[14.066669,120.626558],[14.06646,120.626850],[14.066776,120.626853],[14.066802,120.626572]] },
             { id: "ROSARIO", name: "ROSARIO Canteen", shortName: "ROSARIO", lat: 14.067319, lng: 120.625961, color: "#2563EB", pinColor: "#2563EB", coords: [[14.067415,120.626055],[14.067429,120.625826],[14.067246,120.625826],[14.067228,120.626025],[14.067259,120.626027],[14.067264,120.626058],[14.067415,120.626055]] },
 
             { id: "INFIRMARY", name: "INFIRMARY", shortName: "CLINIC", lat: 14.067080, lng: 120.625864, color: "#EF4444", pinColor: "#EF4444", coords: [[14.066921,120.625989],[14.067193,120.625963],[14.067183,120.625792],[14.066928,120.625812],[14.066921,120.625989]] }
@@ -155,7 +185,11 @@
             });
         });
 
+        var walkpathLayerGroup = L.layerGroup().addTo(map);
+        var routePolylineGroup = L.layerGroup().addTo(map);
+        var alternativeRouteGroup = L.layerGroup().addTo(map);
         var userMarker = null;
+        var destinationMarker = null;
 
         function createSvgPinHtml(fillColor) {
             return '<svg width="28" height="34" viewBox="0 0 24 28" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 3px 6px rgba(0,0,0,0.6));">' +
@@ -164,23 +198,148 @@
                    '</svg>';
         }
 
-        function updateUserMarker(lat, lng) {
+        function createDestinationPinHtml() {
+            return '<svg width="32" height="40" viewBox="0 0 24 28" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 4px 10px rgba(34, 197, 94, 0.8));">' +
+                   '<path d="M20,10c0,4.993 -5.539,10.193 -7.399,11.799a1,1 0,0 1,-1.202 0C9.539,20.193 4,14.993 4,10a8,8 0,0 1,16 0z" fill="#22C55E" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' +
+                   '<circle cx="12" cy="10" r="4" fill="#FFFFFF"/>' +
+                   '</svg>';
+        }
+
+        // Draw background walkpaths (hidden by default unless explicitly called)
+        function renderWalkpaths(pathsJsonStr) {
+            try {
+                walkpathLayerGroup.clearLayers();
+                var paths = JSON.parse(pathsJsonStr);
+                paths.forEach(function(path) {
+                    var latLngs = path.map(function(pt) { return [pt.lat, pt.lng]; });
+                    L.polyline(latLngs, {
+                        color: '#38BDF8',
+                        weight: 2.5,
+                        dashArray: '5, 5',
+                        opacity: 0.55
+                    }).addTo(walkpathLayerGroup);
+                });
+            } catch(e) {
+                console.error("Error rendering walkpaths:", e);
+            }
+        }
+
+        // Draw Alternative / Less Efficient Walk Route (Low Opacity)
+        function drawAlternativeRoute(pointsJsonStr) {
+            try {
+                alternativeRouteGroup.clearLayers();
+                var points = JSON.parse(pointsJsonStr);
+                if (!points || points.length < 2) return;
+                var latLngs = points.map(function(pt) { return [pt.lat, pt.lng]; });
+
+                L.polyline(latLngs, {
+                    color: '#94A3B8',
+                    weight: 3.5,
+                    dashArray: '4, 8',
+                    opacity: 0.35
+                }).addTo(alternativeRouteGroup);
+            } catch(e) {
+                console.error("Error drawing alternative route:", e);
+            }
+        }
+
+        // Highlight Active Shortest Path & Zoom In On User GPS
+        function drawShortestPath(pointsJsonStr, destinationName, isInitialStart) {
+            try {
+                clearShortestPath();
+                var points = JSON.parse(pointsJsonStr);
+                if (!points || points.length < 2) return;
+
+                var latLngs = points.map(function(pt) { return [pt.lat, pt.lng]; });
+
+                // Outer glow line
+                L.polyline(latLngs, {
+                    color: '#0284C7',
+                    weight: 8,
+                    opacity: 0.5
+                }).addTo(routePolylineGroup);
+
+                // Inner bright path line
+                var mainRoute = L.polyline(latLngs, {
+                    color: '#38BDF8',
+                    weight: 4.5,
+                    opacity: 0.95
+                }).addTo(routePolylineGroup);
+
+                // Add destination pin at end point
+                var lastPt = latLngs[latLngs.length - 1];
+                var destIcon = L.divIcon({
+                    className: 'dest-svg-pin',
+                    html: createDestinationPinHtml(),
+                    iconSize: [32, 40],
+                    iconAnchor: [16, 40]
+                });
+                destinationMarker = L.marker(lastPt, { icon: destIcon }).addTo(routePolylineGroup);
+
+                // Zoom in close to the User GPS location (zoom level 20) instead of zooming out full campus!
+                var userPos = latLngs[0];
+                if (isInitialStart) {
+                    map.setView(userPos, 20.5, { animate: true });
+                } else {
+                    map.panTo(userPos, { animate: true });
+                }
+
+                // Hide any previous arrival card
+                hideArrivalAlert();
+            } catch(e) {
+                console.error("Error drawing shortest path:", e);
+            }
+        }
+
+        function clearShortestPath() {
+            routePolylineGroup.clearLayers();
+            alternativeRouteGroup.clearLayers();
+            walkpathLayerGroup.clearLayers(); // Hide walkpath network when trip stops
+            destinationMarker = null;
+        }
+
+        function showArrivalAlert(buildingName) {
+            var card = document.getElementById('arrivalCard');
+            var title = document.getElementById('arrivalTitle');
+            var subtitle = document.getElementById('arrivalSubtitle');
+
+            if (card && title && subtitle) {
+                title.innerHTML = '🎉 Arrived at ' + buildingName + '!';
+                subtitle.innerHTML = 'You are within 2 meters of the building.';
+                card.style.display = 'block';
+
+                setTimeout(function() {
+                    card.style.display = 'none';
+                }, 6000);
+            }
+        }
+
+        function hideArrivalAlert() {
+            var card = document.getElementById('arrivalCard');
+            if (card) card.style.display = 'none';
+        }
+
+        function updateUserMarker(lat, lng, isNavigating) {
             var latLng = [lat, lng];
             if (!userMarker) {
                 var pulseIcon = L.divIcon({
                     className: 'user-location-marker',
-                    iconSize: [20, 20],
-                    iconAnchor: [10, 10]
+                    iconSize: [22, 22],
+                    iconAnchor: [11, 11]
                 });
                 userMarker = L.marker(latLng, { icon: pulseIcon }).addTo(map);
             } else {
                 userMarker.setLatLng(latLng);
             }
+
+            if (isNavigating) {
+                map.panTo(latLng, { animate: true });
+            }
         }
 
         function recenterCampus() {
             if (userMarker) {
-                map.setView(userMarker.getLatLng(), 19);
+                map.setView(userMarker.getLatLng(), 20.5);
             } else {
                 map.setView([14.066730, 120.626382], 19);
             }
