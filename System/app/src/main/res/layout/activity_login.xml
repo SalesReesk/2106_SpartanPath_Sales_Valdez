@@ -298,11 +298,29 @@
             app:iconTint="@color/on_primary"
             app:elevation="2dp" />
 
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnVisitorLogin"
+            style="?attr/materialButtonOutlinedStyle"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/btn_height"
+            android:layout_marginTop="12dp"
+            android:fontFamily="@font/poppins_bold"
+            android:text="Continue as Visitor / Guest"
+            android:textAllCaps="false"
+            android:textColor="@color/primary"
+            android:textSize="@dimen/text_title"
+            app:cornerRadius="@dimen/btn_corner_radius"
+            app:icon="@drawable/ic_explore"
+            app:iconGravity="textEnd"
+            app:iconTint="@color/primary"
+            app:strokeColor="@color/primary"
+            app:strokeWidth="1dp" />
+
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/section_gap"
-            android:visibility="invisible"
+            android:visibility="gone"
             app:cardBackgroundColor="@color/surface_container"
             app:cardCornerRadius="16dp"
             app:cardElevation="0dp">
@@ -369,7 +387,7 @@
                             android:layout_height="wrap_content"
                             android:layout_marginStart="4dp"
                             android:fontFamily="@font/inter_18pt_bold"
-                            android:text="Faculty"
+                            android:text="Student"
                             android:textColor="@color/on_surface"
                             android:textSize="@dimen/text_caption" />
                     </LinearLayout>

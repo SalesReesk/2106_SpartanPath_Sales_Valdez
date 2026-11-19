@@ -121,6 +121,7 @@
                 android:textSize="11sp" />
         </LinearLayout>
 
+
         <TextView
             android:id="@+id/detailReportAssignedTo"
             android:layout_width="wrap_content"
@@ -154,37 +155,58 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="vertical">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnCloseReportDetails"
-                android:layout_width="0dp"
+                android:id="@+id/btnAssignOrManageTicket"
+                android:layout_width="match_parent"
                 android:layout_height="@dimen/input_height"
-                android:layout_weight="1"
-                android:layout_marginEnd="6dp"
-                android:backgroundTint="@color/surface_container_high"
+                android:layout_marginBottom="8dp"
+                android:backgroundTint="@color/primary"
                 android:fontFamily="@font/poppins_bold"
-                android:text="Close"
+                android:text="Assign Maintenance Staff"
                 android:textAllCaps="false"
-                android:textColor="@color/on_surface"
+                android:textColor="@color/on_primary"
                 android:textSize="14sp"
                 app:cornerRadius="12dp"
-                app:elevation="0dp" />
+                app:elevation="0dp"
+                android:visibility="gone" />
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnDeleteReportTicket"
-                android:layout_width="0dp"
-                android:layout_height="@dimen/input_height"
-                android:layout_weight="1"
-                android:layout_marginStart="6dp"
-                android:backgroundTint="@color/error_container"
-                android:fontFamily="@font/poppins_bold"
-                android:text="Delete Ticket"
-                android:textAllCaps="false"
-                android:textColor="@color/error"
-                android:textSize="14sp"
-                app:cornerRadius="12dp"
-                app:elevation="0dp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCloseReportDetails"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="6dp"
+                    android:backgroundTint="@color/surface_container_high"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Close"
+                    android:textAllCaps="false"
+                    android:textColor="@color/on_surface"
+                    android:textSize="14sp"
+                    app:cornerRadius="12dp"
+                    app:elevation="0dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnDeleteReportTicket"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/input_height"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
+                    android:backgroundTint="@color/error_container"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Delete Ticket"
+                    android:textAllCaps="false"
+                    android:textColor="@color/error"
+                    android:textSize="14sp"
+                    app:cornerRadius="12dp"
+                    app:elevation="0dp" />
+            </LinearLayout>
         </LinearLayout>
 
     </LinearLayout>

@@ -74,7 +74,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="6dp"
                     android:fontFamily="@font/inter_18pt_bold"
-                    android:text="Asset Name / Description"
+                    android:text="Asset Name"
                     android:textColor="@color/on_surface"
                     android:textSize="13sp" />
 
@@ -94,6 +94,38 @@
                         android:fontFamily="@font/inter_18pt_regular"
                         android:hint="e.g., Epson Projector EB-E01"
                         android:singleLine="true"
+                        android:textColor="@color/on_surface"
+                        android:textColorHint="@color/outline"
+                        android:textSize="14sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="6dp"
+                    android:fontFamily="@font/inter_18pt_bold"
+                    android:text="Asset Description / Remarks"
+                    android:textColor="@color/on_surface"
+                    android:textSize="13sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/input_height"
+                    android:background="@drawable/bg_input_field"
+                    android:gravity="center_vertical"
+                    android:paddingHorizontal="@dimen/input_padding_horizontal"
+                    android:paddingVertical="8dp"
+                    android:layout_marginBottom="14dp">
+
+                    <EditText
+                        android:id="@+id/inputAssetRemarks"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        android:fontFamily="@font/inter_18pt_regular"
+                        android:hint="e.g., Mounted on ceiling, includes remote"
+                        android:maxLines="3"
                         android:textColor="@color/on_surface"
                         android:textColorHint="@color/outline"
                         android:textSize="14sp" />
@@ -255,6 +287,7 @@
                 </FrameLayout>
 
                 <LinearLayout
+                    android:id="@+id/layoutFloorAndRoom"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">

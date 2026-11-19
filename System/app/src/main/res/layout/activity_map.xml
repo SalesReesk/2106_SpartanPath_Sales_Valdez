@@ -97,7 +97,231 @@
         </RelativeLayout>
     </androidx.cardview.widget.CardView>
 
-    <!-- Bottom Floating Status Legend Pill Card -->
+    <!-- Active Navigation Guidance Card (Shows when navigating to a building) -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardNavigationBanner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/cardHeaderOverlay"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginTop="8dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="#F00F172A"
+        app:cardCornerRadius="14dp"
+        app:cardElevation="8dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="12dp">
+
+            <ImageView
+                android:id="@+id/imgNavDirectionIcon"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_alignParentStart="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="10dp"
+                android:contentDescription="Navigation"
+                android:src="@drawable/ic_explore"
+                app:tint="#38BDF8" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/imgNavDirectionIcon"
+                android:layout_toStartOf="@id/btnStopNavigation"
+                android:layout_centerVertical="true"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/txtNavBuildingTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="Navigating to Building"
+                    android:textColor="#38BDF8"
+                    android:textSize="14sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/txtNavInstructionText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:fontFamily="@font/inter_18pt_regular"
+                    android:text="Calculating shortest path..."
+                    android:textColor="#E2E8F0"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/btnStopNavigation"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:background="@drawable/bg_circle_white_alpha"
+                android:clickable="true"
+                android:contentDescription="Stop Navigation"
+                android:focusable="true"
+                android:padding="6dp"
+                android:src="@drawable/ic_cancel_circle"
+                app:tint="#F87171" />
+        </RelativeLayout>
+    </androidx.cardview.widget.CardView>
+
+    <!-- Floating Dummy GPS Simulator Control Panel -->
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardGpsSimulator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_toStartOf="@id/fabContainer"
+        android:layout_marginHorizontal="16dp"
+        android:layout_marginBottom="16dp"
+        android:visibility="gone"
+        app:cardBackgroundColor="#F00F172A"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="12dp">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentStart="true"
+                    android:layout_centerVertical="true"
+                    android:fontFamily="@font/poppins_bold"
+                    android:text="🎮 GPS Simulator (Tap map to move)"
+                    android:textColor="#FACC15"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:id="@+id/btnCloseGpsSim"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:contentDescription="Close Simulator"
+                    android:src="@drawable/ic_cancel_circle"
+                    app:tint="#94A3B8" />
+            </RelativeLayout>
+
+            <!-- Location Coordinates Display -->
+            <TextView
+                android:id="@+id/txtDummyGpsCoords"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:fontFamily="@font/inter_18pt_regular"
+                android:text="Pos: 14.067698, 120.627504"
+                android:textColor="#94A3B8"
+                android:textSize="10sp" />
+
+            <!-- Direction D-Pad Buttons Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGpsWest"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="44dp"
+                    android:layout_height="38dp"
+                    android:padding="0dp"
+                    android:text="⬅️"
+                    android:textSize="14sp"
+                    app:cornerRadius="8dp" />
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="6dp"
+                    android:orientation="vertical">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGpsNorth"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="44dp"
+                        android:layout_height="38dp"
+                        android:padding="0dp"
+                        android:text="⬆️"
+                        android:textSize="14sp"
+                        app:cornerRadius="8dp" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnGpsSouth"
+                        style="@style/Widget.Material3.Button.TonalButton"
+                        android:layout_width="44dp"
+                        android:layout_height="38dp"
+                        android:layout_marginTop="4dp"
+                        android:padding="0dp"
+                        android:text="⬇️"
+                        android:textSize="14sp"
+                        app:cornerRadius="8dp" />
+                </LinearLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGpsEast"
+                    style="@style/Widget.Material3.Button.TonalButton"
+                    android:layout_width="44dp"
+                    android:layout_height="38dp"
+                    android:padding="0dp"
+                    android:text="➡️"
+                    android:textSize="14sp"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+
+            <!-- Test Action Buttons Row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="horizontal">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGpsAutoWalk"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginEnd="4dp"
+                    android:fontFamily="@font/inter_18pt_bold"
+                    android:padding="0dp"
+                    android:text="🚶 Walk Route"
+                    android:textColor="#FFFFFF"
+                    android:textSize="10sp"
+                    app:backgroundTint="#0284C7"
+                    app:cornerRadius="8dp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnGpsTeleportNearTarget"
+                    android:layout_width="0dp"
+                    android:layout_height="36dp"
+                    android:layout_weight="1"
+                    android:layout_marginStart="4dp"
+                    android:fontFamily="@font/inter_18pt_bold"
+                    android:padding="0dp"
+                    android:text="⚡ 1.5m to Target"
+                    android:textColor="#FFFFFF"
+                    android:textSize="10sp"
+                    app:backgroundTint="#22C55E"
+                    app:cornerRadius="8dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.cardview.widget.CardView>
 
     <!-- Floating Map Control Buttons (Bottom-Right) -->
     <LinearLayout
@@ -108,6 +332,29 @@
         android:layout_alignParentBottom="true"
         android:layout_margin="16dp"
         android:orientation="vertical">
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnFocusTrip"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="Focus Trip Camera"
+            android:src="@drawable/ic_explore"
+            android:visibility="gone"
+            app:backgroundTint="#CC0F172A"
+            app:fabCustomSize="42dp"
+            app:tint="#38BDF8" />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/btnToggleGpsSimulator"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:contentDescription="Dummy GPS Simulator"
+            android:src="@drawable/ic_explore"
+            app:backgroundTint="#CC0F172A"
+            app:fabCustomSize="42dp"
+            app:tint="#FACC15" />
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/btnRecenterCampus"

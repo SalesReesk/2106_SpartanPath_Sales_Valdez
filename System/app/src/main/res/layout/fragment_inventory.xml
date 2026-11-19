@@ -56,15 +56,15 @@
                 android:contentDescription="Clear search" />
 
             <ImageView
-                android:id="@+id/btnScanBarcode"
+                android:id="@+id/btnSortInventory"
                 android:layout_width="@dimen/input_icon_toggle_size"
                 android:layout_height="@dimen/input_icon_toggle_size"
                 android:layout_marginStart="8dp"
-                android:src="@drawable/ic_explore"
+                android:src="@drawable/ic_menu_24"
                 app:tint="@color/primary"
                 android:clickable="true"
                 android:focusable="true"
-                android:contentDescription="Scan Barcode" />
+                android:contentDescription="Sort Inventory" />
         </LinearLayout>
 
         <FrameLayout
