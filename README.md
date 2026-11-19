@@ -1,2 +1,2 @@
 # ACMS-Android-Application
-![Backend Architecture Diagram](Documentation/UML-Diagram-ArasPoint.svg)
+![Backend Architecture Diagram](Documentation/SpartanPath-Updated-UML.svg)
