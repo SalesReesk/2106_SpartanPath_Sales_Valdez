@@ -76,7 +76,7 @@ com.example.araspoint_map
 ### Cloning & Building
 1. Clone the repository:
    ```bash
-   git clone https://github.com/SalesReesk/ACMS-Android-Application.git
+   git clone https://github.com/SalesReesk/2106_SpartanPath_Sales_Valdez.git
    ```
 2. Open the project folder in Android Studio.
 3. Allow Gradle to sync dependencies.
