@@ -84,6 +84,7 @@ class MainDashboardAdminActivity : AppCompatActivity() {
                 }
                 R.id.drawer_logout -> {
                     FirebaseAuth.getInstance().signOut()
+                    getSharedPreferences("SpartanPathLoginPrefs", MODE_PRIVATE).edit().putBoolean("is_visitor", false).apply()
                     startActivity(Intent(this, LoginActivity::class.java))
                     finish()
                     true
@@ -150,29 +151,48 @@ class MainDashboardAdminActivity : AppCompatActivity() {
         val txtHeaderAvatar = headerView.findViewById<TextView>(R.id.txtHeaderAvatar)
         val imgHeaderProfile = headerView.findViewById<ImageView>(R.id.imgHeaderProfile)
 
-        txtHeaderEmail?.text = if (userEmail.isNotEmpty()) userEmail else "user@araspoint.edu"
-        txtHeaderName?.text = firebaseUser?.displayName ?: if (userEmail.isNotEmpty()) userEmail.substringBefore("@").replaceFirstChar { it.uppercase() } else "User"
-        txtHeaderAvatar?.text = txtHeaderName?.text?.take(2)?.toString()?.uppercase() ?: "AP"
+        val isVisitor = (FirebaseAuth.getInstance().currentUser == null) &&
+                (intent.getBooleanExtra("is_visitor", false) || getSharedPreferences("SpartanPathLoginPrefs", MODE_PRIVATE).getBoolean("is_visitor", false))
+        if (isVisitor) {
+            txtHeaderEmail?.text = "visitor@spartanpath.edu"
+            txtHeaderName?.text = "Visitor Guest"
+            txtHeaderRole?.text = "Visitor"
+            txtHeaderAvatar?.text = "VS"
+        } else {
+            txtHeaderEmail?.text = if (userEmail.isNotEmpty()) userEmail else "user@spartanpath.edu"
+            txtHeaderName?.text = firebaseUser?.displayName ?: if (userEmail.isNotEmpty()) userEmail.substringBefore("@").replaceFirstChar { it.uppercase() } else "User"
+            txtHeaderAvatar?.text = txtHeaderName?.text?.take(2)?.toString()?.uppercase() ?: "SP"
+        }
 
         lifecycleScope.launch {
             try {
                 val fullUser = authRepository.getFullUser()
-                if (fullUser != null && fullUser.photo.isNotEmpty() && imgHeaderProfile != null) {
-                    Glide.with(this@MainDashboardAdminActivity)
-                        .load(fullUser.photo)
-                        .into(imgHeaderProfile)
+                if (imgHeaderProfile != null) {
+                    val photoUrl = fullUser?.photo ?: ""
+                    if (photoUrl.isNotEmpty()) {
+                        Glide.with(this@MainDashboardAdminActivity)
+                            .load(photoUrl)
+                            .placeholder(R.drawable.user_icon)
+                            .error(R.drawable.user_icon)
+                            .into(imgHeaderProfile)
+                    } else {
+                        imgHeaderProfile.setImageResource(R.drawable.user_icon)
+                    }
                 }
-            } catch (_: Exception) {}
+            } catch (_: Exception) {
+                imgHeaderProfile?.setImageResource(R.drawable.user_icon)
+            }
 
             val role = authRepository.getUserRole()
             currentUserRole = when {
+                isVisitor -> UserRole.VISITOR
                 userEmail.contains("admin", ignoreCase = true) -> UserRole.ADMIN
                 userEmail.contains("maint", ignoreCase = true) || role == UserRole.MAINTENANCE -> UserRole.MAINTENANCE
                 role != null -> role
                 else -> UserRole.STUDENT
             }
 
-            txtHeaderRole?.text = currentUserRole.name
+            txtHeaderRole?.text = currentUserRole.displayName
 
             val userMgmtItem = binding.navigationView.menu.findItem(R.id.drawer_user_mgmt)
             userMgmtItem?.isVisible = (currentUserRole == UserRole.ADMIN)
@@ -183,10 +203,6 @@ class MainDashboardAdminActivity : AppCompatActivity() {
             } else {
                 txtTabRight?.text = "Reports"
                 imgTabRight?.setImageResource(R.drawable.ic_nav_tasks)
-            }
-
-            if (savedInstanceState == null) {
-                selectTab("home")
             }
         }
 

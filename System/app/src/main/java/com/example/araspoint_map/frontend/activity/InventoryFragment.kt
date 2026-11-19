@@ -3,6 +3,7 @@ package com.example.araspoint_map.frontend.activity
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -24,6 +25,7 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 import com.cloudinary.android.MediaManager
 import com.cloudinary.android.callback.ErrorInfo
 import com.cloudinary.android.callback.UploadCallback
@@ -64,6 +66,7 @@ class InventoryFragment : Fragment() {
     private val maintenanceRepository = MaintenanceRepository()
     private var allAssets = listOf<Asset>()
     private var selectedStatusFilter = "ALL"
+    private var currentSortOption = 0
 
     private var capturedPhotoUrl = ""
     private var activePhotoStatusText: TextView? = null
@@ -182,6 +185,29 @@ class InventoryFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val isVisitor = (FirebaseAuth.getInstance().currentUser == null) &&
+                requireContext().getSharedPreferences("SpartanPathLoginPrefs", Context.MODE_PRIVATE).getBoolean("is_visitor", false)
+
+        if (isVisitor) {
+            binding.recyclerViewInventory.visibility = View.GONE
+            binding.fabAddAsset.visibility = View.GONE
+            binding.emptyStateTextContainer.visibility = View.VISIBLE
+            binding.emptyStateText.visibility = View.VISIBLE
+            binding.emptyStateText.text = "You are currently browsing as a Visitor.\nPlease sign in or register to view campus asset inventory."
+
+            AlertDialog.Builder(requireContext())
+                .setTitle("Sign In Required")
+                .setMessage("You are currently browsing as a Visitor. Please sign in or register first to view campus asset inventory.")
+                .setPositiveButton("Sign In") { _, _ ->
+                    val intent = Intent(requireContext(), LoginActivity::class.java)
+                    startActivity(intent)
+                    requireActivity().finish()
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
+            return
+        }
+
         binding.recyclerViewInventory.layoutManager = LinearLayoutManager(requireContext())
 
         assetAdapter = AssetAdapter(emptyList()) { asset ->
@@ -191,6 +217,18 @@ class InventoryFragment : Fragment() {
 
         val buildingAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, Constants.FILTER_BUILDINGS)
         binding.filterBuilding.adapter = buildingAdapter
+
+        binding.btnSortInventory.setOnClickListener {
+            val sortOptions = arrayOf("Sort by: Tag (A-Z)", "Sort by: Name (A-Z)", "Sort by: Status", "Sort by: Condition")
+            AlertDialog.Builder(requireContext())
+                .setTitle("Sort Inventory")
+                .setSingleChoiceItems(sortOptions, currentSortOption) { dialog, which ->
+                    currentSortOption = which
+                    dialog.dismiss()
+                    filterAssets()
+                }
+                .show()
+        }
 
         binding.fabAddAsset.setOnClickListener {
             val intent = Intent(requireContext(), AddEditAssetActivity::class.java)
@@ -225,10 +263,6 @@ class InventoryFragment : Fragment() {
 
         binding.btnClearSearch.setOnClickListener {
             binding.searchInventory.text?.clear()
-        }
-
-        binding.btnScanBarcode.setOnClickListener {
-            Toast.makeText(requireContext(), "Barcode / QR Scanner ready for camera feed", Toast.LENGTH_SHORT).show()
         }
 
         binding.chipFilterAll.setOnClickListener {
@@ -287,6 +321,10 @@ class InventoryFragment : Fragment() {
 
     private fun loadAssets() {
         if (_binding == null) return
+        val isVisitor = (FirebaseAuth.getInstance().currentUser == null) &&
+                requireContext().getSharedPreferences("SpartanPathLoginPrefs", Context.MODE_PRIVATE).getBoolean("is_visitor", false)
+        if (isVisitor) return
+
         binding.progressBar.visibility = View.VISIBLE
         binding.recyclerViewInventory.visibility = View.GONE
         binding.emptyStateText.visibility = View.GONE
@@ -313,21 +351,24 @@ class InventoryFragment : Fragment() {
             .create()
 
         dialogBinding.detailAssetName.text = asset.assetName
-        dialogBinding.detailAssetId.text = "ID: ${asset.assetId}"
+        dialogBinding.detailAssetId.text = "Tag: ${asset.getFormattedMapTag()}"
         dialogBinding.detailAssetType.text = "Type: ${asset.assetType}"
         dialogBinding.detailAssetLocation.text = "Location: ${asset.location}"
+        if (asset.remarks.isNotBlank()) {
+            dialogBinding.detailAssetRemarks.visibility = View.VISIBLE
+            dialogBinding.detailAssetRemarks.text = "Remarks: ${asset.remarks}"
+        } else {
+            dialogBinding.detailAssetRemarks.visibility = View.GONE
+        }
         dialogBinding.detailAssetStatus.text = "Status: ${asset.status}"
         dialogBinding.detailAssetCondition.text = "Condition: ${asset.condition}"
 
-        if (!asset.photo.isNullOrEmpty()) {
-            dialogBinding.detailAssetImage.visibility = View.VISIBLE
-            com.bumptech.glide.Glide.with(requireContext())
-                .load(asset.photo)
-                .placeholder(R.drawable.ic_inventory_box)
-                .into(dialogBinding.detailAssetImage)
-        } else {
-            dialogBinding.detailAssetImage.visibility = View.GONE
-        }
+        dialogBinding.detailAssetImage.visibility = View.VISIBLE
+        Glide.with(requireContext())
+            .load(asset.photo.ifEmpty { null })
+            .placeholder(R.drawable.ic_inventory_box)
+            .error(R.drawable.ic_inventory_box)
+            .into(dialogBinding.detailAssetImage)
 
         viewLifecycleOwner.lifecycleScope.launch {
             try {
@@ -347,6 +388,7 @@ class InventoryFragment : Fragment() {
             val intent = Intent(requireContext(), AddEditAssetActivity::class.java).apply {
                 putExtra("EXTRA_ASSET_ID", asset.assetId)
                 putExtra("EXTRA_ASSET_NAME", asset.assetName)
+                putExtra("EXTRA_ASSET_REMARKS", asset.remarks)
                 putExtra("EXTRA_ASSET_TYPE", asset.assetType)
                 putExtra("EXTRA_ASSET_LOCATION", asset.location)
                 putExtra("EXTRA_ASSET_STATUS", asset.status.name)
@@ -396,6 +438,8 @@ class InventoryFragment : Fragment() {
 
         dialogBinding.dialogReportTitle.setText("Issue: ${asset.assetName}")
         dialogBinding.dialogReportLocation.setText(asset.location)
+        dialogBinding.dialogReportLocation.isEnabled = false
+        dialogBinding.dialogReportLocation.isFocusable = false
 
         val priorities = arrayOf("LOW", "MEDIUM", "HIGH", "CRITICAL")
         val priorityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, priorities)
@@ -491,7 +535,14 @@ class InventoryFragment : Fragment() {
             matchesQuery && matchesBuilding && matchesStatus
         }
 
-        assetAdapter.updateAssets(filtered)
+        val sortedFiltered = when (currentSortOption) {
+            1 -> filtered.sortedBy { it.assetName.lowercase() }
+            2 -> filtered.sortedBy { it.status.name }
+            3 -> filtered.sortedBy { it.condition.name }
+            else -> filtered.sortedBy { it.assetId.lowercase() }
+        }
+
+        assetAdapter.updateAssets(sortedFiltered)
         if (filtered.isEmpty()) {
             binding.recyclerViewInventory.visibility = View.GONE
             binding.emptyStateText.visibility = View.VISIBLE

@@ -3,6 +3,8 @@ package com.example.araspoint_map.frontend.activity
 import android.Manifest
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.net.Uri
@@ -193,7 +195,22 @@ class ReportFragment : Fragment() {
         binding.recyclerViewReports.adapter = reportAdapter
 
         binding.fabSubmitReport.setOnClickListener {
-            showNewIssueDialog()
+            val isVisitor = (FirebaseAuth.getInstance().currentUser == null) &&
+                requireContext().getSharedPreferences("SpartanPathLoginPrefs", Context.MODE_PRIVATE).getBoolean("is_visitor", false)
+            if (isVisitor) {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Sign In Required")
+                    .setMessage("You are currently browsing as a Visitor. Please sign in or register first to submit maintenance reports and track repairs.")
+                    .setPositiveButton("Sign In") { _, _ ->
+                        val intent = Intent(requireContext(), LoginActivity::class.java)
+                        startActivity(intent)
+                        requireActivity().finish()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            } else {
+                showNewIssueDialog()
+            }
         }
 
         binding.searchReportInput.addTextChangedListener(object : TextWatcher {
@@ -221,31 +238,34 @@ class ReportFragment : Fragment() {
         }
         updateChipStyles()
 
+        binding.progressBar.visibility = View.VISIBLE
+
         viewLifecycleOwner.lifecycleScope.launch {
             maintenanceViewModel.reports.collectLatest { reports ->
                 if (_binding != null) {
-                    if (currentUserRole == null) {
-                        currentUserRole = authRepository.getUserRole()
-                    }
-
+                    binding.progressBar.visibility = View.GONE
+                    val fetchedRole = authRepository.getUserRole()
                     val currentFbUser = FirebaseAuth.getInstance().currentUser
                     val currentEmail = currentFbUser?.email ?: ""
                     val currentName = currentFbUser?.displayName ?: ""
 
-                    val effectiveRole = if (currentEmail.contains("admin", ignoreCase = true)) {
-                        UserRole.ADMIN
-                    } else {
-                        currentUserRole ?: UserRole.STUDENT
+                    val effectiveRole = when {
+                        currentEmail.contains("admin", ignoreCase = true) || fetchedRole == UserRole.ADMIN -> UserRole.ADMIN
+                        currentEmail.contains("maint", ignoreCase = true) || fetchedRole == UserRole.MAINTENANCE -> UserRole.MAINTENANCE
+                        fetchedRole != null -> fetchedRole
+                        else -> UserRole.STUDENT
                     }
                     currentUserRole = effectiveRole
 
                     baseReportsList = when (effectiveRole) {
                         UserRole.ADMIN -> reports
                         UserRole.MAINTENANCE -> reports.filter {
-                            (it.status == ReportStatus.IN_PROGRESS || it.status == ReportStatus.RESOLVED) &&
-                                    (it.assignedTo.isEmpty() || it.assignedTo.contains(currentEmail, ignoreCase = true) || it.assignedTo.contains(currentName, ignoreCase = true))
+                            val st = it.status ?: ReportStatus.PENDING
+                            val assigned = it.assignedTo ?: ""
+                            (st == ReportStatus.IN_PROGRESS || st == ReportStatus.RESOLVED) &&
+                                    (assigned.isEmpty() || assigned.contains(currentEmail, ignoreCase = true) || assigned.contains(currentName, ignoreCase = true))
                         }
-                        else -> reports.filter { it.reporterEmail.equals(currentEmail, ignoreCase = true) }
+                        else -> reports.filter { (it.reporterEmail ?: "").equals(currentEmail, ignoreCase = true) }
                     }
 
                     updateChipCounts(baseReportsList)
@@ -300,19 +320,19 @@ class ReportFragment : Fragment() {
     private fun filterAndDisplayReports() {
         if (_binding == null) return
         var filtered = when (selectedStatusFilter) {
-            "PENDING" -> baseReportsList.filter { it.status == ReportStatus.PENDING }
-            "IN_PROGRESS" -> baseReportsList.filter { it.status == ReportStatus.IN_PROGRESS }
-            "RESOLVED" -> baseReportsList.filter { it.status == ReportStatus.RESOLVED }
+            "PENDING" -> baseReportsList.filter { (it.status ?: ReportStatus.PENDING) == ReportStatus.PENDING }
+            "IN_PROGRESS" -> baseReportsList.filter { (it.status ?: ReportStatus.PENDING) == ReportStatus.IN_PROGRESS }
+            "RESOLVED" -> baseReportsList.filter { (it.status ?: ReportStatus.PENDING) == ReportStatus.RESOLVED }
             else -> baseReportsList
         }
 
         if (searchQuery.isNotEmpty()) {
             filtered = filtered.filter {
-                it.title.contains(searchQuery, ignoreCase = true) ||
-                        it.description.contains(searchQuery, ignoreCase = true) ||
-                        it.location.contains(searchQuery, ignoreCase = true) ||
-                        it.reportId.contains(searchQuery, ignoreCase = true) ||
-                        it.assetId.contains(searchQuery, ignoreCase = true)
+                (it.title ?: "").contains(searchQuery, ignoreCase = true) ||
+                        (it.description ?: "").contains(searchQuery, ignoreCase = true) ||
+                        (it.location ?: "").contains(searchQuery, ignoreCase = true) ||
+                        (it.reportId ?: "").contains(searchQuery, ignoreCase = true) ||
+                        (it.assetId ?: "").contains(searchQuery, ignoreCase = true)
             }
         }
 
@@ -325,7 +345,8 @@ class ReportFragment : Fragment() {
         }
 
         val showManage = (currentUserRole == UserRole.ADMIN || currentUserRole == UserRole.MAINTENANCE)
-        reportAdapter.updateReports(filtered, showManage)
+        val isAdmin = (currentUserRole == UserRole.ADMIN)
+        reportAdapter.updateReports(filtered, showManage, isAdmin)
     }
 
     private fun showNewIssueDialog() {
@@ -410,40 +431,63 @@ class ReportFragment : Fragment() {
             .setView(dialogBinding.root)
             .create()
 
-        dialogBinding.detailReportTitle.text = record.title.ifEmpty { "Maintenance Report" }
-        dialogBinding.detailReportLocation.text = "Location: ${record.location}"
-        dialogBinding.detailReportDescription.text = record.description
+        val recTitle = (record.title ?: "").ifEmpty { "Maintenance Report" }
+        dialogBinding.detailReportTitle.text = "$recTitle (${record.getFormattedMapTag()})"
+        dialogBinding.detailReportLocation.text = "Location: ${record.location ?: ""}"
+        dialogBinding.detailReportDescription.text = record.description ?: ""
 
-        if (record.photo.isNotEmpty()) {
+        val photoUrl = record.photo ?: ""
+        if (photoUrl.isNotEmpty()) {
             dialogBinding.cardReportImage.visibility = View.VISIBLE
             Glide.with(requireContext())
-                .load(record.photo)
+                .load(photoUrl)
                 .placeholder(R.drawable.ic_inventory_box)
                 .into(dialogBinding.detailReportImage)
         } else {
             dialogBinding.cardReportImage.visibility = View.GONE
         }
 
-        dialogBinding.detailReportStatus.text = "Status: ${record.status}"
+        val currentStatus = record.status ?: ReportStatus.PENDING
+        dialogBinding.detailReportStatus.text = "Status: $currentStatus"
 
-        when (record.status) {
+        when (currentStatus) {
             ReportStatus.PENDING -> dialogBinding.detailReportStatus.setTextColor(Color.parseColor("#EF6C00"))
             ReportStatus.IN_PROGRESS -> dialogBinding.detailReportStatus.setTextColor(Color.parseColor("#1565C0"))
             ReportStatus.RESOLVED -> dialogBinding.detailReportStatus.setTextColor(Color.parseColor("#2E7D32"))
             ReportStatus.REJECTED -> dialogBinding.detailReportStatus.setTextColor(Color.parseColor("#C62828"))
         }
 
-        dialogBinding.detailReportPriority.text = "Priority: ${record.priority}"
-        when (record.priority) {
+        val currentPriority = record.priority ?: PriorityStatus.MEDIUM
+        dialogBinding.detailReportPriority.text = "Priority: $currentPriority"
+        when (currentPriority) {
             PriorityStatus.LOW -> dialogBinding.detailReportPriority.setTextColor(Color.parseColor("#1565C0"))
             PriorityStatus.MEDIUM -> dialogBinding.detailReportPriority.setTextColor(Color.parseColor("#FFB300"))
             PriorityStatus.HIGH -> dialogBinding.detailReportPriority.setTextColor(Color.parseColor("#EF6C00"))
             PriorityStatus.CRITICAL -> dialogBinding.detailReportPriority.setTextColor(Color.parseColor("#C62828"))
         }
 
-        dialogBinding.detailReportAssignedTo.text = "Assigned To: ${record.assignedTo.ifEmpty { "Unassigned (Pending Admin)" }}"
-        dialogBinding.detailDateReported.text = "Reported on: ${record.dateReported.ifEmpty { "N/A" }}"
-        dialogBinding.detailDateUpdated.text = "Last Updated: ${record.dateUpdated.ifEmpty { "Pending Admin Review" }}"
+        val assigned = (record.assignedTo ?: "").ifEmpty { "Unassigned (Pending Admin)" }
+        dialogBinding.detailReportAssignedTo.text = "Assigned To: $assigned"
+        dialogBinding.detailDateReported.text = "Reported on: ${(record.dateReported ?: "").ifEmpty { "N/A" }}"
+        dialogBinding.detailDateUpdated.text = "Last Updated: ${(record.dateUpdated ?: "").ifEmpty { "Pending Admin Review" }}"
+
+        val isStaffOrAdmin = (currentUserRole == UserRole.ADMIN || currentUserRole == UserRole.MAINTENANCE)
+        if (isStaffOrAdmin) {
+            dialogBinding.btnAssignOrManageTicket.visibility = View.VISIBLE
+            val isAdmin = (currentUserRole == UserRole.ADMIN)
+            val hasAssignee = hasAssignedPerson(record)
+            dialogBinding.btnAssignOrManageTicket.text = if (isAdmin) {
+                if (hasAssignee) "Reassign Staff" else "Assign Maintenance Staff"
+            } else {
+                "Advance Status"
+            }
+            dialogBinding.btnAssignOrManageTicket.setOnClickListener {
+                dialog.dismiss()
+                handleManageReportClick(record)
+            }
+        } else {
+            dialogBinding.btnAssignOrManageTicket.visibility = View.GONE
+        }
 
         dialogBinding.btnCloseReportDetails.setOnClickListener {
             dialog.dismiss()
@@ -497,26 +541,58 @@ class ReportFragment : Fragment() {
         }
     }
 
+    private fun hasAssignedPerson(record: MaintenanceRecord): Boolean {
+        val assigned = record.assignedTo ?: ""
+        return assigned.isNotEmpty() &&
+                assigned != "Unassigned" &&
+                !assigned.contains("Pending Admin", ignoreCase = true)
+    }
+
     private fun handleManageReportClick(record: MaintenanceRecord) {
-        if (record.status == ReportStatus.PENDING && (currentUserRole == UserRole.ADMIN || currentUserRole == UserRole.MAINTENANCE)) {
+        val currentStatus = record.status ?: ReportStatus.PENDING
+        val isAdmin = (currentUserRole == UserRole.ADMIN)
+        val hasAssignee = hasAssignedPerson(record)
+
+        if (isAdmin && (!hasAssignee || currentStatus == ReportStatus.PENDING)) {
             showAssignMaintenanceDialog(record)
+        } else if (isAdmin && hasAssignee) {
+            val options = arrayOf("Reassign Staff & Priority", "Update Report Status")
+            AlertDialog.Builder(requireContext())
+                .setTitle("Manage Ticket (${record.assignedTo})")
+                .setItems(options) { _, which ->
+                    when (which) {
+                        0 -> showAssignMaintenanceDialog(record)
+                        1 -> showStatusSelectionDialog(record)
+                    }
+                }
+                .show()
         } else {
-            val nextStatus = when (record.status) {
-                ReportStatus.PENDING -> ReportStatus.IN_PROGRESS
-                ReportStatus.IN_PROGRESS -> ReportStatus.RESOLVED
-                ReportStatus.RESOLVED -> ReportStatus.REJECTED
-                ReportStatus.REJECTED -> ReportStatus.PENDING
-            }
-
-            record.status = nextStatus
-            record.dateUpdated = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
-
-            maintenanceViewModel.updateReport(record)
-            viewLifecycleOwner.lifecycleScope.launch {
-                updateAssetStatus(record.assetId, nextStatus)
-            }
-            Toast.makeText(requireContext(), "Status updated to: $nextStatus", Toast.LENGTH_SHORT).show()
+            showStatusSelectionDialog(record)
         }
+    }
+
+    private fun showStatusSelectionDialog(record: MaintenanceRecord) {
+        val statuses = ReportStatus.entries.toTypedArray()
+        val statusNames = statuses.map { it.displayName }.toTypedArray()
+
+        AlertDialog.Builder(requireContext())
+            .setTitle("Select Report Status")
+            .setItems(statusNames) { _, which ->
+                val selectedStatus = statuses[which]
+                updateReportStatus(record, selectedStatus)
+            }
+            .show()
+    }
+
+    private fun updateReportStatus(record: MaintenanceRecord, newStatus: ReportStatus) {
+        record.status = newStatus
+        record.dateUpdated = SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.getDefault()).format(Date())
+
+        maintenanceViewModel.updateReport(record)
+        viewLifecycleOwner.lifecycleScope.launch {
+            updateAssetStatus(record.assetId ?: "", newStatus)
+        }
+        Toast.makeText(requireContext(), "Status updated to: ${newStatus.displayName}", Toast.LENGTH_SHORT).show()
     }
 
     private fun showAssignMaintenanceDialog(record: MaintenanceRecord) {
@@ -539,13 +615,15 @@ class ReportFragment : Fragment() {
             val priorities = arrayOf("LOW", "MEDIUM", "HIGH", "CRITICAL")
             val priorityAdapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, priorities)
             dialogBinding.spinnerAssignPriority.adapter = priorityAdapter
-            val currentIndex = priorities.indexOf(record.priority.name)
+            val currentPriorityName = (record.priority ?: PriorityStatus.MEDIUM).name
+            val currentIndex = priorities.indexOf(currentPriorityName)
             if (currentIndex >= 0) dialogBinding.spinnerAssignPriority.setSelection(currentIndex)
 
             dialogBinding.btnConfirmAssignment.setOnClickListener {
                 val selectedStaff = dialogBinding.spinnerAssignStaff.selectedItem?.toString() ?: "General Maintenance Team"
-                val selectedPriorityStr = dialogBinding.spinnerAssignPriority.selectedItem?.toString() ?: record.priority.name
-                val finalPriority = try { PriorityStatus.valueOf(selectedPriorityStr) } catch (_: Exception) { record.priority }
+                val selectedPriorityStr = dialogBinding.spinnerAssignPriority.selectedItem?.toString() ?: (record.priority?.name ?: "MEDIUM")
+                val defaultPri = record.priority ?: PriorityStatus.MEDIUM
+                val finalPriority = try { PriorityStatus.valueOf(selectedPriorityStr) } catch (_: Exception) { defaultPri }
 
                 record.assignedTo = selectedStaff
                 record.priority = finalPriority
@@ -554,7 +632,7 @@ class ReportFragment : Fragment() {
 
                 maintenanceViewModel.updateReport(record)
                 viewLifecycleOwner.lifecycleScope.launch {
-                    updateAssetStatus(record.assetId, ReportStatus.IN_PROGRESS)
+                    updateAssetStatus(record.assetId ?: "", ReportStatus.IN_PROGRESS)
                 }
                 Toast.makeText(requireContext(), "Assigned to $selectedStaff ($finalPriority Priority)", Toast.LENGTH_LONG).show()
                 dialog.dismiss()
@@ -568,13 +646,15 @@ class ReportFragment : Fragment() {
     class ReportAdapter(
         private var reports: List<MaintenanceRecord>,
         private var showManageButton: Boolean,
+        private var isAdmin: Boolean = false,
         private val onItemClick: (MaintenanceRecord) -> Unit,
         private val onManageClick: (MaintenanceRecord) -> Unit
     ) : RecyclerView.Adapter<ReportAdapter.ReportViewHolder>() {
 
-        fun updateReports(newReports: List<MaintenanceRecord>, manage: Boolean) {
+        fun updateReports(newReports: List<MaintenanceRecord>, manage: Boolean, admin: Boolean) {
             reports = newReports
             showManageButton = manage
+            isAdmin = admin
             notifyDataSetChanged()
         }
 
@@ -585,7 +665,7 @@ class ReportFragment : Fragment() {
 
         override fun onBindViewHolder(holder: ReportViewHolder, position: Int) {
             val record = reports[position]
-            holder.bind(record, showManageButton, onItemClick, onManageClick)
+            holder.bind(record, showManageButton, isAdmin, onItemClick, onManageClick)
         }
 
         override fun getItemCount() = reports.size
@@ -594,15 +674,31 @@ class ReportFragment : Fragment() {
             fun bind(
                 record: MaintenanceRecord,
                 showManage: Boolean,
+                isAdmin: Boolean,
                 onItemClick: (MaintenanceRecord) -> Unit,
                 onManageClick: (MaintenanceRecord) -> Unit
             ) {
-                binding.reportTitle.text = record.title.ifEmpty { "Maintenance Report" }
-                binding.reportLocation.text = record.location
-                binding.reportDateText.text = record.dateReported
-                binding.reportStatus.text = record.status.name
+                val repId = record.reportId ?: ""
+                binding.reportCode.text = if (repId.startsWith("#")) repId else "#$repId"
 
-                when (record.status) {
+                val priority = record.priority ?: PriorityStatus.MEDIUM
+                binding.reportPriority.text = "● ${priority.name}"
+                when (priority) {
+                    PriorityStatus.LOW -> binding.reportPriority.setTextColor(Color.parseColor("#1565C0"))
+                    PriorityStatus.MEDIUM -> binding.reportPriority.setTextColor(Color.parseColor("#FFB300"))
+                    PriorityStatus.HIGH -> binding.reportPriority.setTextColor(Color.parseColor("#EF6C00"))
+                    PriorityStatus.CRITICAL -> binding.reportPriority.setTextColor(Color.parseColor("#C62828"))
+                }
+
+                binding.reportTitle.text = (record.title ?: "").ifEmpty { "Maintenance Report" }
+                binding.reportAssetTag.text = "Tag: ${record.assetId ?: ""}"
+                binding.reportLocation.text = record.location ?: ""
+                binding.reportDateText.text = "• ${record.dateReported ?: ""}"
+
+                val status = record.status ?: ReportStatus.PENDING
+                binding.reportStatus.text = status.name
+
+                when (status) {
                     ReportStatus.PENDING -> binding.reportStatus.setTextColor(Color.parseColor("#EF6C00"))
                     ReportStatus.IN_PROGRESS -> binding.reportStatus.setTextColor(Color.parseColor("#1565C0"))
                     ReportStatus.RESOLVED -> binding.reportStatus.setTextColor(Color.parseColor("#2E7D32"))
@@ -611,7 +707,13 @@ class ReportFragment : Fragment() {
 
                 binding.btnActionManage.visibility = if (showManage) View.VISIBLE else View.GONE
                 if (showManage) {
-                    binding.btnActionManage.text = if (record.status == ReportStatus.PENDING) "Assign" else "Advance"
+                    val assigned = record.assignedTo ?: ""
+                    val hasAssignee = assigned.isNotEmpty() && assigned != "Unassigned" && !assigned.contains("Pending Admin", ignoreCase = true)
+                    binding.btnActionManage.text = if (isAdmin) {
+                        if (hasAssignee) "Reassign" else "Assign"
+                    } else {
+                        "Advance"
+                    }
                 }
 
                 binding.root.setOnClickListener { onItemClick(record) }

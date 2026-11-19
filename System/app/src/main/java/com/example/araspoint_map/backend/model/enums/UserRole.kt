@@ -4,5 +4,6 @@ enum class UserRole(val displayName: String) {
     STUDENT("Student"),
     TEACHER("Teacher"),
     ADMIN("Administrator"),
-    MAINTENANCE("Maintenance Staff")
+    MAINTENANCE("Maintenance Staff"),
+    VISITOR("Visitor")
 }

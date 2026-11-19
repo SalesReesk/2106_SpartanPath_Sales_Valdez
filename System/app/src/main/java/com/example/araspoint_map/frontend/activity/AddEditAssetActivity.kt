@@ -164,8 +164,14 @@ class AddEditAssetActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val buildingName = Constants.BUILDINGS.getOrNull(position) ?: "HEB"
                 val floors = Constants.BUILDING_FLOORS_MAP[buildingName] ?: listOf("1")
-                val floorAdapter = ArrayAdapter(this@AddEditAssetActivity, R.layout.simple_spinner_dropdown_item, floors)
-                binding.spinnerFloor.adapter = floorAdapter
+                val isSingleFloor = floors.size == 1
+                if (isSingleFloor) {
+                    binding.layoutFloorAndRoom.visibility = View.GONE
+                } else {
+                    binding.layoutFloorAndRoom.visibility = View.VISIBLE
+                    val floorAdapter = ArrayAdapter(this@AddEditAssetActivity, R.layout.simple_spinner_dropdown_item, floors)
+                    binding.spinnerFloor.adapter = floorAdapter
+                }
             }
             override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
@@ -175,6 +181,7 @@ class AddEditAssetActivity : AppCompatActivity() {
             binding.titleText.text = "Edit Asset"
             binding.btnSaveAsset.text = "Update Asset"
             binding.inputAssetName.setText(intent.getStringExtra("EXTRA_ASSET_NAME") ?: "")
+            binding.inputAssetRemarks.setText(intent.getStringExtra("EXTRA_ASSET_REMARKS") ?: "")
 
             uploadedPhotoUrl = intent.getStringExtra("EXTRA_ASSET_PHOTO") ?: ""
             if (uploadedPhotoUrl.isNotEmpty()) {
@@ -206,12 +213,18 @@ class AddEditAssetActivity : AppCompatActivity() {
                     if (parts.isNotEmpty()) {
                         binding.spinnerBuilding.selectValue(parts[0])
                     }
-                    if (parts.size > 1) {
-                        val roomStr = parts.drop(1).joinToString(" ")
-                        binding.inputRoomNumber.setText(roomStr)
-                        if (roomStr.isNotEmpty() && roomStr[0].isDigit()) {
-                            val floorChar = roomStr[0].toString()
-                            binding.spinnerFloor.selectValue(floorChar)
+                    val buildingName = parts.getOrNull(0) ?: "HEB"
+                    val floors = Constants.BUILDING_FLOORS_MAP[buildingName] ?: listOf("1")
+                    if (floors.size == 1) {
+                        binding.layoutFloorAndRoom.visibility = View.GONE
+                    } else {
+                        if (parts.size > 1) {
+                            val roomStr = parts.drop(1).joinToString(" ")
+                            binding.inputRoomNumber.setText(roomStr)
+                            if (roomStr.isNotEmpty() && roomStr[0].isDigit()) {
+                                val floorChar = roomStr[0].toString()
+                                binding.spinnerFloor.selectValue(floorChar)
+                            }
                         }
                     }
                 }
@@ -233,19 +246,31 @@ class AddEditAssetActivity : AppCompatActivity() {
 
         binding.btnSaveAsset.setOnClickListener {
             val name = binding.inputAssetName.text.toString().trim()
+            val remarks = binding.inputAssetRemarks.text.toString().trim()
             val type = binding.spinnerAssetType.selectedItem.toString()
             val statusStr = binding.spinnerAssetStatus.selectedItem.toString()
             val conditionStr = binding.spinnerAssetCondition.selectedItem.toString()
             val building = binding.spinnerBuilding.selectedItem.toString()
-            val floor = binding.spinnerFloor.selectedItem.toString()
-            val room = binding.inputRoomNumber.text.toString().trim()
 
-            if (name.isEmpty() || room.isEmpty()) {
-                Toast.makeText(this, "Please fill in Asset Name and Room Number", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
+            val floors = Constants.BUILDING_FLOORS_MAP[building] ?: listOf("1")
+            val isSingleFloor = floors.size == 1
+
+            val location: String
+            if (isSingleFloor) {
+                if (name.isEmpty()) {
+                    Toast.makeText(this, "Please fill in Asset Name", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                location = building
+            } else {
+                val floor = binding.spinnerFloor.selectedItem.toString()
+                val room = binding.inputRoomNumber.text.toString().trim()
+                if (name.isEmpty() || room.isEmpty()) {
+                    Toast.makeText(this, "Please fill in Asset Name and Room Number", Toast.LENGTH_SHORT).show()
+                    return@setOnClickListener
+                }
+                location = "$building Floor $floor Room $room"
             }
-
-            val location = "$building Floor $floor Room $room"
 
             val status = try { AssetStatus.valueOf(statusStr) } catch (_: Exception) { AssetStatus.AVAILABLE }
             val condition = try { AssetCondition.valueOf(conditionStr) } catch (_: Exception) { AssetCondition.GOOD }
@@ -257,7 +282,8 @@ class AddEditAssetActivity : AppCompatActivity() {
                 location = location,
                 status = status,
                 condition = condition,
-                photo = uploadedPhotoUrl
+                photo = uploadedPhotoUrl,
+                remarks = remarks
             )
 
             assetViewModel.saveAsset(asset, editingAssetId != null)

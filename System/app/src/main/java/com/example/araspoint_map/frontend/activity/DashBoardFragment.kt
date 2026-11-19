@@ -1,7 +1,9 @@
 package com.example.araspoint_map.frontend.activity
 
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.webkit.WebView
@@ -34,7 +36,7 @@ class DashBoardFragment : Fragment() {
     private var userRole: UserRole = UserRole.STUDENT
 
     companion object {
-        private const val PREFS_NAME = "ArasPointProfilePrefs"
+        private const val PREFS_NAME = "SpartanPathProfilePrefs"
     }
 
     override fun onCreateView(
@@ -52,11 +54,15 @@ class DashBoardFragment : Fragment() {
 
         setupMiniMapWebView()
 
+        val isVisitor = (FirebaseAuth.getInstance().currentUser == null) &&
+                requireContext().getSharedPreferences("SpartanPathLoginPrefs", Context.MODE_PRIVATE).getBoolean("is_visitor", false)
         val userEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
 
         viewLifecycleOwner.lifecycleScope.launch {
             val role = authRepository.getUserRole()
+            if (_binding == null) return@launch
             userRole = when {
+                isVisitor -> UserRole.VISITOR
                 userEmail.contains("admin", ignoreCase = true) -> UserRole.ADMIN
                 userEmail.contains("maint", ignoreCase = true) || role == UserRole.MAINTENANCE -> UserRole.MAINTENANCE
                 role != null -> role
@@ -79,6 +85,18 @@ class DashBoardFragment : Fragment() {
                 UserRole.MAINTENANCE -> (activity as? MainDashboardAdminActivity)?.openReportFragment()
                 UserRole.TEACHER -> (activity as? MainDashboardAdminActivity)?.openReportFragment()
                 UserRole.STUDENT -> (activity as? MainDashboardAdminActivity)?.openReportFragment()
+                UserRole.VISITOR -> {
+                    AlertDialog.Builder(requireContext())
+                        .setTitle("Sign In Required")
+                        .setMessage("You are currently browsing as a Visitor. Please sign in or register first to view campus asset inventory.")
+                        .setPositiveButton("Sign In") { _, _ ->
+                            val intent = Intent(requireContext(), LoginActivity::class.java)
+                            startActivity(intent)
+                            requireActivity().finish()
+                        }
+                        .setNegativeButton("Cancel", null)
+                        .show()
+                }
             }
         }
 
@@ -88,6 +106,7 @@ class DashBoardFragment : Fragment() {
                 UserRole.MAINTENANCE -> (activity as? MainDashboardAdminActivity)?.openMapFragment()
                 UserRole.TEACHER -> (activity as? MainDashboardAdminActivity)?.openInventoryFragment()
                 UserRole.STUDENT -> (activity as? MainDashboardAdminActivity)?.openMapFragment()
+                UserRole.VISITOR -> (activity as? MainDashboardAdminActivity)?.openMapFragment()
             }
         }
     }
@@ -148,6 +167,19 @@ class DashBoardFragment : Fragment() {
                 binding.txtQuickOp2Title.text = "Find Free PCs on Campus Map"
                 binding.imgQuickOp2Icon.setImageResource(R.drawable.ic_explore)
             }
+            UserRole.VISITOR -> {
+                binding.txtKpiSectionTitle.text = "Campus Navigation & Visitor Overview"
+                binding.lblStatTotalAssets.text = "Campus Buildings"
+                binding.lblStatAvailable.text = "Open Facilities"
+                binding.lblStatAttention.text = "Restricted Areas"
+                binding.lblStatReports.text = "Public Notices"
+
+                binding.txtQuickOp1Title.text = "View Campus Facilities & Assets"
+                binding.imgQuickOp1Icon.setImageResource(R.drawable.ic_inventory_box)
+
+                binding.txtQuickOp2Title.text = "Explore Campus Map & Wayfinding"
+                binding.imgQuickOp2Icon.setImageResource(R.drawable.ic_explore)
+            }
         }
     }
 
@@ -157,6 +189,7 @@ class DashBoardFragment : Fragment() {
     }
 
     private fun loadDashboardStats() {
+        if (_binding == null) return
         val userEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
 
         viewLifecycleOwner.lifecycleScope.launch {

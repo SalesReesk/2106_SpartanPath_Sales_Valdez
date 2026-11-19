@@ -2,6 +2,8 @@ package com.example.araspoint_map.frontend.activity
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
@@ -73,6 +75,31 @@ class AccountFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        val isVisitor = (FirebaseAuth.getInstance().currentUser == null) &&
+                requireContext().getSharedPreferences("SpartanPathLoginPrefs", Context.MODE_PRIVATE).getBoolean("is_visitor", false)
+        if (isVisitor) {
+            binding.profileName.text = "Visitor Guest"
+            binding.profileEmail.text = "visitor@spartanpath.edu"
+            binding.profileUid.text = "UID: VISITOR001"
+            binding.profileIdNumber.text = "VISITOR-001"
+            binding.profileRole.text = "Visitor"
+            binding.profileAccessLevel.text = "Visitor Guest (Read Only)"
+            binding.profileImage.setImageResource(R.drawable.user_icon)
+            binding.btnEditProfile.setOnClickListener {
+                AlertDialog.Builder(requireContext())
+                    .setTitle("Sign In Required")
+                    .setMessage("You are currently browsing as a Visitor. Please sign in or register first to edit your profile and manage account details.")
+                    .setPositiveButton("Sign In") { _, _ ->
+                        val intent = Intent(requireContext(), LoginActivity::class.java)
+                        startActivity(intent)
+                        requireActivity().finish()
+                    }
+                    .setNegativeButton("Cancel", null)
+                    .show()
+            }
+            return
+        }
 
         val currentUser = FirebaseAuth.getInstance().currentUser
         val displayName =
@@ -159,6 +186,7 @@ class AccountFragment : Fragment() {
     }
 
     private fun loadCloudinaryProfileImage() {
+        if (_binding == null) return
         viewLifecycleOwner.lifecycleScope.launch {
             try {
                 val user = authRepository.getFullUser()

@@ -68,6 +68,7 @@ class UserManagementFragment : Fragment() {
     }
 
     private fun loadUsers() {
+        if (_binding == null) return
         binding.progressBar.visibility = View.VISIBLE
         viewLifecycleOwner.lifecycleScope.launch {
             allUsers = authRepository.getAllUsers()

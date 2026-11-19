@@ -25,7 +25,7 @@ class LoginActivity : AppCompatActivity() {
     private var isPasswordVisible = false
 
     companion object {
-        private const val PREFS_NAME = "ArasPointLoginPrefs"
+        private const val PREFS_NAME = "SpartanPathLoginPrefs"
         private const val KEY_EMAIL = "key_email"
         private const val KEY_REMEMBER = "key_remember"
     }
@@ -36,6 +36,7 @@ class LoginActivity : AppCompatActivity() {
 
         val existingUser = FirebaseAuth.getInstance().currentUser
         if (existingUser != null) {
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit().putBoolean("is_visitor", false).apply()
             if (existingUser.isEmailVerified) {
                 val intent = Intent(this, MainDashboardAdminActivity::class.java)
                 startActivity(intent)
@@ -121,18 +122,18 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.btnDemoFaculty.setOnClickListener {
-            binding.email.setText("faculty.arasof@g.batstate-u.edu.ph")
-            binding.password.setText("TeacherPortal2024!")
+            binding.email.setText("lawrencedump57@gmail.com")
+            binding.password.setText("test1234")
         }
 
         binding.btnDemoMaintenance.setOnClickListener {
-            binding.email.setText("maint.auditor@g.batstate-u.edu.ph")
-            binding.password.setText("FieldOpsNasugbu!")
+            binding.email.setText("growbel65@gmail.com")
+            binding.password.setText("test1234")
         }
 
         binding.btnDemoAdmin.setOnClickListener {
-            binding.email.setText("ict.admin@g.batstate-u.edu.ph")
-            binding.password.setText("RootAdminNasugbu99!")
+            binding.email.setText("lawrencevaldez57@gmail.com")
+            binding.password.setText("test1234")
         }
 
         binding.loginButton.setOnClickListener {
@@ -155,6 +156,7 @@ class LoginActivity : AppCompatActivity() {
             }
 
             val editor = sharedPreferences.edit()
+            editor.putBoolean("is_visitor", false)
             if (binding.checkboxRememberMe.isChecked) {
                 editor.putBoolean(KEY_REMEMBER, true)
                 editor.putString(KEY_EMAIL, email)
@@ -191,6 +193,17 @@ class LoginActivity : AppCompatActivity() {
         binding.textRegister.setOnClickListener {
             val intent = Intent(this, RegisterActivity::class.java)
             startActivity(intent)
+        }
+
+        binding.btnVisitorLogin.setOnClickListener {
+            FirebaseAuth.getInstance().signOut()
+            val editor = sharedPreferences.edit()
+            editor.putBoolean("is_visitor", true)
+            editor.apply()
+            val intent = Intent(this, MainDashboardAdminActivity::class.java)
+            intent.putExtra("is_visitor", true)
+            startActivity(intent)
+            finish()
         }
     }
 }

@@ -50,7 +50,7 @@ class EmailVerificationActivity : AppCompatActivity() {
                 val verified = authRepository.reloadUser()
                 if (verified) {
                     Toast.makeText(this@EmailVerificationActivity,
-                        "Email verified! Welcome to ArasPoint.", Toast.LENGTH_SHORT).show()
+                        "Email verified! Welcome to SpartanPath.", Toast.LENGTH_SHORT).show()
                     val intent = Intent(this@EmailVerificationActivity, MainDashboardAdminActivity::class.java)
                     intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
                     startActivity(intent)
