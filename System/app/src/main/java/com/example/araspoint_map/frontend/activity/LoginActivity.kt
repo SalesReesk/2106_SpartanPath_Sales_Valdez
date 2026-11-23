@@ -7,6 +7,8 @@ import android.text.InputType
 import android.util.Patterns
 import android.view.View
 import android.widget.ArrayAdapter
+import android.widget.EditText
+import android.widget.FrameLayout
 import android.widget.ScrollView
 import android.widget.Toast
 import androidx.activity.enableEdgeToEdge
@@ -18,6 +20,7 @@ import com.example.araspoint_map.R
 import com.example.araspoint_map.backend.repository.AuthRepository
 import com.example.araspoint_map.databinding.ActivityLoginBinding
 import com.example.araspoint_map.frontend.viewModel.AuthViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.firebase.auth.FirebaseAuth
 
 class LoginActivity : AppCompatActivity() {
@@ -195,7 +198,42 @@ class LoginActivity : AppCompatActivity() {
         }
 
         binding.textClickable.setOnClickListener {
-            Toast.makeText(this, "Forgot Password - Please contact ICT Facilities office", Toast.LENGTH_SHORT).show()
+            val inputEmail = EditText(this).apply {
+                hint = "name@g.batstate-u.edu.ph"
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS
+                setText(binding.email.text.toString().trim())
+                setSelection(text?.length ?: 0)
+            }
+
+            val container = FrameLayout(this).apply {
+                setPadding(48, 20, 48, 10)
+                addView(inputEmail, FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.WRAP_CONTENT
+                ))
+            }
+
+            MaterialAlertDialogBuilder(this)
+                .setTitle("Reset Password")
+                .setMessage("Enter your registered university email address to receive a password reset link:")
+                .setView(container)
+                .setPositiveButton("Send Reset Link") { _, _ ->
+                    val email = inputEmail.text.toString().trim()
+                    if (email.isEmpty()) {
+                        Toast.makeText(this, "Please enter your email address", Toast.LENGTH_SHORT).show()
+                        return@setPositiveButton
+                    }
+                    if (!Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                        Toast.makeText(this, "Please enter a valid email address", Toast.LENGTH_SHORT).show()
+                        return@setPositiveButton
+                    }
+
+                    authViewModel.sendPasswordReset(email) { success, message ->
+                        Toast.makeText(this, message ?: if (success) "Password reset email sent" else "Failed to send reset email", Toast.LENGTH_LONG).show()
+                    }
+                }
+                .setNegativeButton("Cancel", null)
+                .show()
         }
 
         binding.textRegister.setOnClickListener {

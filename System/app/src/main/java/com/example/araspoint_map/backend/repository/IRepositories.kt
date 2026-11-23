@@ -37,6 +37,7 @@ interface IAuthRepository {
         idNumber: String = ""
     ): Result<User>
     suspend fun login(email: String, password: String): Result<User>
+    suspend fun sendPasswordResetEmail(email: String): Result<Unit>
     fun logout()
     suspend fun getCurrentUser(): User?
     suspend fun sendEmailVerification(): Result<Unit>

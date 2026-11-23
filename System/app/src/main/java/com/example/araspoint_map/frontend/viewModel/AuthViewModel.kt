@@ -47,6 +47,20 @@ class AuthViewModel(
         }
     }
 
+    fun sendPasswordReset(
+        email: String,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        viewModelScope.launch {
+            val result = authRepository.sendPasswordResetEmail(email)
+            if (result.isSuccess) {
+                onResult(true, "Password reset email sent successfully. Please check your inbox.")
+            } else {
+                onResult(false, result.exceptionOrNull()?.message ?: "Failed to send password reset email")
+            }
+        }
+    }
+
     fun login(
         email: String,
         password: String,
