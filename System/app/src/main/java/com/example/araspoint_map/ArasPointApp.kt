@@ -7,10 +7,10 @@ import com.cloudinary.android.MediaManager
 import org.osmdroid.config.Configuration
 import java.io.File
 
-class ArasPointApp : Application() {
+class SpartanPathApp : Application() {
 
     companion object {
-        private const val TAG = "ArasPointApp"
+        private const val TAG = "SpartanPathApp"
     }
 
     override fun onCreate() {

@@ -72,7 +72,7 @@
             android:fontFamily="@font/inter_18pt_bold"
             android:paddingHorizontal="10dp"
             android:paddingVertical="3dp"
-            android:text="ArasPoint v2.4"
+            android:text="SpartanPath v1.0.0"
             android:textColor="@color/primary"
             android:textSize="@dimen/text_caption"
             android:letterSpacing="0.05"
@@ -93,7 +93,7 @@
             android:layout_marginTop="2dp"
             android:layout_marginBottom="@dimen/section_gap"
             android:fontFamily="@font/inter_18pt_regular"
-            android:text="Join ArasPoint with institutional credentials to track campus assets."
+            android:text="Join SpartanPath with institutional credentials to track campus assets."
             android:textColor="@color/on_surface_variant"
             android:textSize="@dimen/text_body"
             android:gravity="center" />
@@ -407,7 +407,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/inter_18pt_regular"
-                android:text="Already registered with ArasPoint? "
+                android:text="Already registered with SpartanPath? "
                 android:textColor="@color/on_surface_variant"
                 android:textSize="@dimen/text_label" />
 

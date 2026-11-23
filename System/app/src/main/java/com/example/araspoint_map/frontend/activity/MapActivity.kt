@@ -336,6 +336,11 @@ class MapActivity : AppCompatActivity() {
             @Suppress("DEPRECATION")
             databaseEnabled = true
             cacheMode = WebSettings.LOAD_DEFAULT
+            allowFileAccess = false
+            @Suppress("DEPRECATION")
+            allowFileAccessFromFileURLs = false
+            @Suppress("DEPRECATION")
+            allowUniversalAccessFromFileURLs = false
         }
         binding.mapWebView.addJavascriptInterface(WebAppInterface(), "AndroidBridge")
         binding.mapWebView.webViewClient = object : WebViewClient() {
@@ -426,8 +431,9 @@ class MapActivity : AppCompatActivity() {
                 obj.put("lng", node.lng)
                 jsonArray.put(obj)
             }
-            val safeName = activeDestinationBuildingName.replace("'", "\\'")
-            binding.mapWebView.evaluateJavascript("drawShortestPath('$jsonArray', '$safeName', $isInitialStart)", null)
+            val safeName = JSONObject.quote(activeDestinationBuildingName)
+            val jsonArrayStr = JSONObject.quote(jsonArray.toString())
+            binding.mapWebView.evaluateJavascript("drawShortestPath($jsonArrayStr, $safeName, $isInitialStart)", null)
 
             // Draw alternative less efficient walk route (low opacity)
             val altPath = parsedCampusData?.paths?.getOrNull(1)?.coordinates ?: emptyList()
@@ -439,7 +445,8 @@ class MapActivity : AppCompatActivity() {
                     obj.put("lng", node.lng)
                     altJsonArray.put(obj)
                 }
-                binding.mapWebView.evaluateJavascript("drawAlternativeRoute('$altJsonArray')", null)
+                val altJsonArrayStr = JSONObject.quote(altJsonArray.toString())
+                binding.mapWebView.evaluateJavascript("drawAlternativeRoute($altJsonArrayStr)", null)
             }
 
             // Turn instructions
@@ -459,8 +466,8 @@ class MapActivity : AppCompatActivity() {
         binding.txtNavBuildingTitle.setTextColor(0xFF22C55E.toInt())
         binding.txtNavInstructionText.text = "You are within 2 meters of the building area."
 
-        val safeName = buildingName.replace("'", "\\'")
-        binding.mapWebView.evaluateJavascript("showArrivalAlert('$safeName')", null)
+        val safeName = JSONObject.quote(buildingName)
+        binding.mapWebView.evaluateJavascript("showArrivalAlert($safeName)", null)
         Toast.makeText(this, "You have arrived at $buildingName!", Toast.LENGTH_LONG).show()
     }
 

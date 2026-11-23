@@ -61,7 +61,7 @@
                     android:layout_gravity="center"
                     android:src="@drawable/app_logo"
                     android:scaleType="centerInside"
-                    android:contentDescription="ArasPoint Logo" />
+                    android:contentDescription="SpartanPath Logo" />
             </FrameLayout>
         </androidx.cardview.widget.CardView>
 
@@ -69,7 +69,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/poppins_bold"
-            android:text="ArasPoint"
+            android:text="SpartanPath"
             android:textColor="@color/on_surface"
             android:textSize="@dimen/text_display"
             android:textStyle="bold" />
@@ -317,6 +317,7 @@
             app:strokeWidth="1dp" />
 
         <androidx.cardview.widget.CardView
+            android:id="@+id/cardDemoContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/section_gap"

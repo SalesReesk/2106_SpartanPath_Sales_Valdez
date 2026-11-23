@@ -16,7 +16,6 @@ import com.bumptech.glide.Glide
 import com.example.araspoint_map.R
 import com.example.araspoint_map.backend.model.enums.UserRole
 import com.example.araspoint_map.backend.repository.AuthRepository
-import com.example.araspoint_map.backend.repository.DatabaseSeeder
 import com.example.araspoint_map.databinding.FragmentSettingsBinding
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.Dispatchers
@@ -88,64 +87,6 @@ class SettingsFragment : Fragment() {
 
         binding.btnAssetAuditChecklist.setOnClickListener {
             showAssetAuditChecklistDialog()
-        }
-
-        binding.btnSeedDummyData.setOnClickListener {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Seed Dummy Data")
-                .setMessage("This will upload 35+ sample assets across campus buildings and 5 maintenance reports to Firebase Firestore. Proceed?")
-                .setPositiveButton("Seed Data") { _, _ ->
-                    Toast.makeText(requireContext(), "Seeding dummy data to Firestore...", Toast.LENGTH_SHORT).show()
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val result = DatabaseSeeder.seedDummyData()
-                        withContext(Dispatchers.Main) {
-                            if (_binding != null) {
-                                if (result.isSuccess) {
-                                    Toast.makeText(requireContext(), result.getOrNull() ?: "Data seeded successfully!", Toast.LENGTH_LONG).show()
-                                } else {
-                                    Toast.makeText(requireContext(), "Failed to seed data: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        }
-                    }
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-
-        binding.btnDeleteDummyData.setOnClickListener {
-            AlertDialog.Builder(requireContext())
-                .setTitle("Delete Dummy Seed Data")
-                .setMessage("This will remove all 35 seeded sample assets and 5 dummy maintenance reports from Firestore. Proceed?")
-                .setPositiveButton("Delete Data") { _, _ ->
-                    Toast.makeText(requireContext(), "Deleting dummy data from Firestore...", Toast.LENGTH_SHORT).show()
-                    lifecycleScope.launch(Dispatchers.IO) {
-                        val result = DatabaseSeeder.deleteDummyData()
-                        withContext(Dispatchers.Main) {
-                            if (_binding != null) {
-                                if (result.isSuccess) {
-                                    Toast.makeText(requireContext(), result.getOrNull() ?: "Dummy data deleted successfully!", Toast.LENGTH_LONG).show()
-                                } else {
-                                    Toast.makeText(requireContext(), "Failed to delete dummy data: ${result.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                                }
-                            }
-                        }
-                    }
-                }
-                .setNegativeButton("Cancel", null)
-                .show()
-        }
-
-        viewLifecycleOwner.lifecycleScope.launch {
-            try {
-                val role = AuthRepository().getUserRole()
-                val userEmail = FirebaseAuth.getInstance().currentUser?.email ?: ""
-                val isAdmin = userEmail.contains("admin", ignoreCase = true) || role == UserRole.ADMIN
-                if (_binding != null) {
-                    binding.btnSeedDummyData.visibility = if (isAdmin) View.VISIBLE else View.GONE
-                    binding.btnDeleteDummyData.visibility = if (isAdmin) View.VISIBLE else View.GONE
-                }
-            } catch (_: Exception) {}
         }
     }
 

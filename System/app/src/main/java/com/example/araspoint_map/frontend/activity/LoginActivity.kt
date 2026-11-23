@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import android.os.Bundle
 import android.text.InputType
 import android.util.Patterns
+import android.view.View
 import android.widget.ArrayAdapter
 import android.widget.ScrollView
 import android.widget.Toast
@@ -12,6 +13,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.example.araspoint_map.BuildConfig
 import com.example.araspoint_map.R
 import com.example.araspoint_map.backend.repository.AuthRepository
 import com.example.araspoint_map.databinding.ActivityLoginBinding
@@ -54,6 +56,12 @@ class LoginActivity : AppCompatActivity() {
         binding = ActivityLoginBinding.inflate(layoutInflater)
         authViewModel = AuthViewModel(AuthRepository())
         setContentView(binding.root)
+
+        if (BuildConfig.DEBUG) {
+            binding.cardDemoContainer.visibility = View.VISIBLE
+        } else {
+            binding.cardDemoContainer.visibility = View.GONE
+        }
 
         ViewCompat.setOnApplyWindowInsetsListener(binding.root) { v, insets ->
             val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())

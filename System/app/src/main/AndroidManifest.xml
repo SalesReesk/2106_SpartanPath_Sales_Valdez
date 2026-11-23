@@ -10,7 +10,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
-        android:name=".ArasPointApp"
+        android:name=".SpartanPathApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -36,7 +36,7 @@
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".frontend.activity.LoginActivity"
-            android:exported="true"
+            android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity
             android:name=".frontend.activity.RegisterActivity"
@@ -53,6 +53,7 @@
         <activity
             android:name=".frontend.activity.SplashActivity"
             android:exported="true"
+            android:label="@string/app_name"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -62,6 +63,10 @@
         </activity>
         <activity
             android:name=".frontend.activity.MapActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".frontend.activity.AccountActivity"
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
         <activity

@@ -548,7 +548,7 @@
             android:fontFamily="sans-serif"
             android:gravity="center"
             android:lineSpacingMultiplier="1.4"
-            android:text="ArasPoint v1.0.0\nBatStateU ARASOF-Nasugbu\nSemestral Project for OOP"
+            android:text="@string/app_version_info"
             android:textColor="@color/outline"
             android:textSize="11sp" />
 

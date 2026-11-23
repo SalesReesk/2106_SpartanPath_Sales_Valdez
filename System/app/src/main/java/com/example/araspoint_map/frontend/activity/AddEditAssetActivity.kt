@@ -42,6 +42,7 @@ class AddEditAssetActivity : AppCompatActivity() {
     private val assetViewModel: AssetViewModel by viewModels()
     private var editingAssetId: String? = null
     private var uploadedPhotoUrl: String = ""
+    private var selectedImageUri: Uri? = null
     private var tempCameraUri: Uri? = null
 
     private val takePictureLauncher = registerForActivityResult(ActivityResultContracts.TakePicture()) { success ->
@@ -60,7 +61,8 @@ class AddEditAssetActivity : AppCompatActivity() {
 
     private fun launchCamera() {
         try {
-            val photoFile = File(cacheDir, "camera_asset_${System.currentTimeMillis()}.jpg")
+            val cameraDir = File(cacheDir, "camera").apply { mkdirs() }
+            val photoFile = File(cameraDir, "camera_asset_${System.currentTimeMillis()}.jpg")
             tempCameraUri = FileProvider.getUriForFile(this, "${packageName}.fileprovider", photoFile)
             takePictureLauncher.launch(tempCameraUri!!)
         } catch (e: Exception) {
@@ -76,7 +78,9 @@ class AddEditAssetActivity : AppCompatActivity() {
         if (result.resultCode == RESULT_OK && result.data != null) {
             val resultUri = UCrop.getOutput(result.data!!)
             if (resultUri != null) {
-                uploadImageToCloudinary(resultUri)
+                selectedImageUri = resultUri
+                binding.txtPhotoStatus.text = "Photo cropped & ready ✓"
+                Toast.makeText(this, "Photo selected! It will upload when you save.", Toast.LENGTH_SHORT).show()
             }
         } else if (result.resultCode == UCrop.RESULT_ERROR && result.data != null) {
             val cropError = UCrop.getError(result.data!!)
@@ -275,18 +279,58 @@ class AddEditAssetActivity : AppCompatActivity() {
             val status = try { AssetStatus.valueOf(statusStr) } catch (_: Exception) { AssetStatus.AVAILABLE }
             val condition = try { AssetCondition.valueOf(conditionStr) } catch (_: Exception) { AssetCondition.GOOD }
 
-            val asset = Asset(
-                assetId = editingAssetId ?: Asset().assetId,
-                assetName = name,
-                assetType = type,
-                location = location,
-                status = status,
-                condition = condition,
-                photo = uploadedPhotoUrl,
-                remarks = remarks
-            )
+            if (selectedImageUri != null) {
+                binding.btnSaveAsset.isEnabled = false
+                binding.txtPhotoStatus.text = "Uploading photo to Cloudinary..."
+                Toast.makeText(this, "Uploading photo...", Toast.LENGTH_SHORT).show()
 
-            assetViewModel.saveAsset(asset, editingAssetId != null)
+                MediaManager.get().upload(selectedImageUri!!)
+                    .unsigned(BuildConfig.CLOUDINARY_UPLOAD_PRESET)
+                    .callback(object : UploadCallback {
+                        override fun onStart(requestId: String) {}
+                        override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
+                        override fun onSuccess(requestId: String, resultData: Map<*, *>) {
+                            val secureUrl = resultData["secure_url"] as? String ?: ""
+                            uploadedPhotoUrl = secureUrl
+                            runOnUiThread {
+                                binding.btnSaveAsset.isEnabled = true
+                                binding.txtPhotoStatus.text = "Photo uploaded ✓"
+                                val asset = Asset(
+                                    assetId = editingAssetId ?: Asset().assetId,
+                                    assetName = name,
+                                    assetType = type,
+                                    location = location,
+                                    status = status,
+                                    condition = condition,
+                                    photo = uploadedPhotoUrl,
+                                    remarks = remarks
+                                )
+                                assetViewModel.saveAsset(asset, editingAssetId != null)
+                            }
+                        }
+                        override fun onError(requestId: String, error: ErrorInfo) {
+                            runOnUiThread {
+                                binding.btnSaveAsset.isEnabled = true
+                                binding.txtPhotoStatus.text = "Upload failed"
+                                Toast.makeText(this@AddEditAssetActivity, "Upload failed: ${error.description}", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                        override fun onReschedule(requestId: String, error: ErrorInfo) {}
+                    })
+                    .dispatch()
+            } else {
+                val asset = Asset(
+                    assetId = editingAssetId ?: Asset().assetId,
+                    assetName = name,
+                    assetType = type,
+                    location = location,
+                    status = status,
+                    condition = condition,
+                    photo = uploadedPhotoUrl,
+                    remarks = remarks
+                )
+                assetViewModel.saveAsset(asset, editingAssetId != null)
+            }
         }
     }
 
@@ -298,33 +342,5 @@ class AddEditAssetActivity : AppCompatActivity() {
                 return
             }
         }
-    }
-
-    private fun uploadImageToCloudinary(imageUri: Uri) {
-        binding.txtPhotoStatus.text = "Uploading cropped photo..."
-        Toast.makeText(this, "Uploading photo...", Toast.LENGTH_SHORT).show()
-
-        MediaManager.get().upload(imageUri)
-            .unsigned(BuildConfig.CLOUDINARY_UPLOAD_PRESET)
-            .callback(object : UploadCallback {
-                override fun onStart(requestId: String) {}
-                override fun onProgress(requestId: String, bytes: Long, totalBytes: Long) {}
-                override fun onSuccess(requestId: String, resultData: Map<*, *>) {
-                    val secureUrl = resultData["secure_url"] as? String ?: ""
-                    uploadedPhotoUrl = secureUrl
-                    runOnUiThread {
-                        binding.txtPhotoStatus.text = "Photo cropped & uploaded ✓"
-                        Toast.makeText(this@AddEditAssetActivity, "Photo uploaded successfully!", Toast.LENGTH_SHORT).show()
-                    }
-                }
-                override fun onError(requestId: String, error: ErrorInfo) {
-                    runOnUiThread {
-                        binding.txtPhotoStatus.text = "Upload failed"
-                        Toast.makeText(this@AddEditAssetActivity, "Upload failed: ${error.description}", Toast.LENGTH_LONG).show()
-                    }
-                }
-                override fun onReschedule(requestId: String, error: ErrorInfo) {}
-            })
-            .dispatch()
     }
 }

@@ -88,7 +88,8 @@ class InventoryFragment : Fragment() {
 
     private fun launchCamera() {
         try {
-            val photoFile = File(requireContext().cacheDir, "camera_inv_report_${System.currentTimeMillis()}.jpg")
+            val cameraDir = File(requireContext().cacheDir, "camera").apply { mkdirs() }
+            val photoFile = File(cameraDir, "camera_inv_report_${System.currentTimeMillis()}.jpg")
             tempCameraUri = FileProvider.getUriForFile(requireContext(), "${requireContext().packageName}.fileprovider", photoFile)
             takePictureLauncher.launch(tempCameraUri!!)
         } catch (e: Exception) {

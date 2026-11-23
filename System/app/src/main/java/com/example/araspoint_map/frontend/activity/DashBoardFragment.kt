@@ -220,6 +220,11 @@ class DashBoardFragment : Fragment() {
             javaScriptEnabled = true
             domStorageEnabled = true
             cacheMode = WebSettings.LOAD_DEFAULT
+            allowFileAccess = false
+            @Suppress("DEPRECATION")
+            allowFileAccessFromFileURLs = false
+            @Suppress("DEPRECATION")
+            allowUniversalAccessFromFileURLs = false
         }
         binding.miniMapWebView.isVerticalScrollBarEnabled = false
         binding.miniMapWebView.isHorizontalScrollBarEnabled = false

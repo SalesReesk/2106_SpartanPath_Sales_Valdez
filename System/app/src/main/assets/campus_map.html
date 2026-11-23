@@ -304,8 +304,8 @@
             var subtitle = document.getElementById('arrivalSubtitle');
 
             if (card && title && subtitle) {
-                title.innerHTML = '🎉 Arrived at ' + buildingName + '!';
-                subtitle.innerHTML = 'You are within 2 meters of the building.';
+                title.textContent = '🎉 Arrived at ' + buildingName + '!';
+                subtitle.textContent = 'You are within 2 meters of the building.';
                 card.style.display = 'block';
 
                 setTimeout(function() {

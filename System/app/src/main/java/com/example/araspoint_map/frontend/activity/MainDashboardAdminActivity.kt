@@ -231,6 +231,7 @@ class MainDashboardAdminActivity : AppCompatActivity() {
     }
 
     fun openAccountFragment() {
-        openFragment(AccountFragment())
+        val intent = Intent(this, AccountActivity::class.java)
+        startActivity(intent)
     }
 }

@@ -37,7 +37,7 @@
                     android:layout_height="match_parent"
                     android:src="@drawable/app_logo"
                     android:scaleType="centerInside"
-                    android:contentDescription="ArasPoint Logo" />
+                    android:contentDescription="SpartanPath Logo" />
             </LinearLayout>
         </androidx.cardview.widget.CardView>
 
@@ -45,7 +45,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="24dp"
-            android:text="ArasPoint"
+            android:text="SpartanPath"
             android:textSize="36sp"
             android:textStyle="bold"
             android:textColor="@color/on_surface"

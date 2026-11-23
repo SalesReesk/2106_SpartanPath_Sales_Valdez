@@ -20,7 +20,7 @@
             android:layout_height="wrap_content"
             android:background="@color/surface_container_lowest"
             app:navigationIcon="@drawable/ic_menu_24"
-            app:title="ArasPoint"
+            app:title="SpartanPath"
             app:titleTextAppearance="@style/TextAppearance.Material3.TitleMedium"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"

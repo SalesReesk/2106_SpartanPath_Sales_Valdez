@@ -45,7 +45,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="1dp"
                     android:fontFamily="@font/inter_18pt_regular"
-                    android:text="user@araspoint.edu"
+                    android:text="user@spartanpath.edu"
                     android:textColor="@color/on_surface_variant"
                     android:textSize="12sp" />
             </LinearLayout>

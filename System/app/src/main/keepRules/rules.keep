@@ -1,10 +1,59 @@
 # Add project specific R8 rules here.
 # AGP will combine all keep rule files in src/main/keepRules to pass to R8
 
-# Preserve model classes for Firebase Firestore & JSON deserialization
+# Keep Application class
+-keep class com.example.araspoint_map.SpartanPathApp { *; }
+
+# Keep all Activities, Fragments, Adapters, and ViewModels
+-keep class com.example.araspoint_map.frontend.activity.** { *; }
+-keep class com.example.araspoint_map.frontend.viewModel.** { *; }
+
+# Keep all Data Binding / ViewBinding classes
+-keep class com.example.araspoint_map.databinding.** { *; }
+
+# Keep all Backend Models, Enums, Repositories, and Services
 -keep class com.example.araspoint_map.backend.model.** { *; }
+-keepclassmembers class com.example.araspoint_map.backend.model.** { *; }
+-keepclassmembers enum com.example.araspoint_map.backend.model.enums.** { *; }
+-keep class com.example.araspoint_map.backend.repository.** { *; }
+-keep class com.example.araspoint_map.backend.service.** { *; }
+-keep class com.example.araspoint_map.backend.navigation.** { *; }
 
 # Preserve WebView JavaScript Interface for map communication
 -keepclassmembers class com.example.araspoint_map.frontend.activity.MapActivity$WebAppInterface {
     @android.webkit.JavascriptInterface <methods>;
 }
+
+# Kotlin Coroutines & Reflection
+-keep class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
+
+# XmlPullParser (used by KmlParser)
+-keep class org.xmlpull.** { *; }
+-dontwarn org.xmlpull.**
+-keep class com.android.org.kxml2.** { *; }
+-dontwarn com.android.org.kxml2.**
+
+# AndroidX Navigation, Lifecycle, Fragment, ViewBinding
+-keep class androidx.** { *; }
+-dontwarn androidx.**
+
+# Cloudinary SDK Keep Rules
+-keep class com.cloudinary.** { *; }
+-dontwarn com.cloudinary.**
+
+# OSMDroid Keep Rules
+-keep class org.osmdroid.** { *; }
+-dontwarn org.osmdroid.**
+
+# Glide Keep Rules
+-keep class com.bumptech.glide.** { *; }
+-dontwarn com.bumptech.glide.**
+
+# UCrop Keep Rules
+-keep class com.yalantis.ucrop.** { *; }
+-dontwarn com.yalantis.ucrop.**
+
+# Firebase Keep Rules
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
