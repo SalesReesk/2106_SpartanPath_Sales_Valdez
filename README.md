@@ -9,7 +9,7 @@
 ---
 
 ## Overview
-**SpartanPath** (ArasPoint Map) is an enterprise-grade Android application developed for **Batangas State University ARASOF-Nasugbu**. The system bridges the gap between campus spatial navigation, facility asset inventory tracking, and maintenance issue reporting. 
+**SpartanPath** (ArasPoint Map) is an Android application developed for **Batangas State University ARASOF-Nasugbu**. The system bridges the gap between campus spatial navigation, facility asset inventory tracking, and maintenance issue reporting. 
 
 Students, faculty, and visitors frequently struggle with locating specific campus buildings and rooms. Concurrently, administrative staff face challenges maintaining accurate inventories of facility equipment and tracking maintenance work orders. SpartanPath solves these problems by providing an offline-capable interactive campus map with graph-based A* routing, real-time Firebase-backed asset management, and strict Role-Based Access Control (RBAC) workflows.
 
